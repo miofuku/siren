@@ -1,59 +1,57 @@
-import NextAuth from "next-auth";
-import CredentialsProvider from "next-auth/providers/credentials";
-import { connectToDatabase } from "@/lib/mongodb";
-import { verifyPassword } from "@/lib/auth";
+import NextAuth from 'next-auth'
+import CredentialsProvider from 'next-auth/providers/credentials'
+import { connectToDatabase } from '@/lib/mongodb'
+import { verifyPassword } from '@/lib/auth'
 
 const handler = NextAuth({
   providers: [
     CredentialsProvider({
-      name: "Credentials",
+      name: 'Credentials',
       credentials: {
-        email: { label: "Email", type: "email" },
-        password: { label: "Password", type: "password" }
+        email: { label: 'Email', type: 'email' },
+        password: { label: 'Password', type: 'password' }
       },
       async authorize(credentials) {
-        const { email, password } = credentials;
+        const client = await connectToDatabase()
+        const usersCollection = client.db().collection('users')
         
-        const client = await connectToDatabase();
-        const usersCollection = client.db().collection("users");
-        
-        const user = await usersCollection.findOne({ email });
+        const user = await usersCollection.findOne({ email: credentials?.email })
         
         if (!user) {
-          client.close();
-          throw new Error("No user found with this email");
+          client.close()
+          throw new Error('No user found with this email')
         }
         
-        const isValid = await verifyPassword(password, user.password);
+        const isValid = await verifyPassword(credentials?.password, user.password)
         
         if (!isValid) {
-          client.close();
-          throw new Error("Incorrect password");
+          client.close()
+          throw new Error('Incorrect password')
         }
         
-        client.close();
-        return { id: user._id.toString(), email: user.email, name: user.name };
+        client.close()
+        return { id: user._id.toString(), email: user.email, name: user.name }
       }
     })
   ],
   session: {
-    strategy: "jwt"
+    strategy: 'jwt'
   },
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.id = user.id;
+        token.id = user.id
       }
-      return token;
+      return token
     },
     async session({ session, token }) {
-      session.user.id = token.id;
-      return session;
+      session.user.id = token.id
+      return session
     }
   },
   pages: {
-    signIn: "/auth/signin",
+    signIn: '/auth/signin',
   }
-});
+})
 
-export { handler as GET, handler as POST };
+export { handler as GET, handler as POST }
