@@ -1,5 +1,6 @@
-import { MongoClient } from 'mongodb';
-import { z } from 'zod';
+require('dotenv').config();
+const { MongoClient } = require('mongodb');
+const { z } = require('zod');
 
 const PostSchema = z.object({
   title: z.string().min(1).max(100),
@@ -65,3 +66,5 @@ async function generateDummyData(count: number) {
 
 // Usage: Call this function with the number of dummy posts you want to generate
 generateDummyData(50);
+
+module.exports = { generateDummyData };
