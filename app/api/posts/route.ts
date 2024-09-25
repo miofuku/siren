@@ -1,5 +1,5 @@
-import { NextResponse } from 'next/server';
-import { connectToDatabase } from '@/lib/mongodb';
+import { NextRequest, NextResponse } from 'next/server';
+import { connectToDatabase } from '../../../lib/mongodb';
 import { z } from 'zod';
 
 // Define the schema for post creation
@@ -16,10 +16,11 @@ const PostSchema = z.object({
   })
 });
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   try {
     const db = await connectToDatabase();
-    const posts = await db.collection('posts').find({}).toArray();
+    const collection = db.collection('posts');
+    const posts = await collection.find({}).toArray();
     return NextResponse.json(posts);
   } catch (error) {
     console.error('Failed to fetch posts:', error);
@@ -27,9 +28,11 @@ export async function GET(request: Request) {
   }
 }
 
-export async function POST(request: Request) {
+
+export async function POST(request: NextRequest) {
   try {
     const db = await connectToDatabase();
+    const collection = db.collection('posts');
     const data = await request.json();
 
     // Validate the input data
@@ -42,12 +45,7 @@ export async function POST(request: Request) {
 
     // If validation succeeds, insert the post
     const validatedData = validationResult.data;
-    const result = await db.collection('posts').insertOne({
-      ...validatedData,
-      createdAt: new Date(),
-      updatedAt: new Date()
-    });
-
+    const result = await collection.insertOne(validatedData);
     return NextResponse.json({ id: result.insertedId }, { status: 201 });
   } catch (error) {
     console.error('Failed to create post:', error);
