@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "target": "es5",
     "baseUrl": ".",
     "paths": {
       "@/*": [
@@ -35,7 +36,7 @@
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts"
-  ],
+, "app/posts/[id]/page.jsx"  ],
   "exclude": [
     "node_modules"
   ]
