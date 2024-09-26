@@ -22,7 +22,7 @@ export default function Home() {
                   About
                 </Link>
                 <Link 
-                  href="/signin"
+                  href="/auth/signin"
                   className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900 hover:text-indigo-600"
                 >
                   Sign In
@@ -55,7 +55,7 @@ export default function Home() {
               <PostsList limit={10} />
               <div className="mt-6 flex justify-center">
                 <Link 
-                  href="/api/posts" 
+                  href="/posts" 
                   className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                 >
                   View All Posts

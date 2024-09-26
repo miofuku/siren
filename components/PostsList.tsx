@@ -13,9 +13,17 @@ const PostsList: React.FC<PostsListProps> = ({ limit }) => {
   useEffect(() => {
     async function fetchPosts() {
       const url = limit ? `/api/posts?limit=${limit}` : '/api/posts';
-      const response = await fetch(url);
-      const data = await response.json();
-      setPosts(data);
+      try {
+        const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error('Failed to fetch posts');
+        }
+        const data = await response.json();
+        setPosts(data);
+      } catch (error) {
+        console.error('Error fetching posts:', error);
+        // You might want to set an error state here and display it to the user
+      }
     }
     fetchPosts();
   }, [limit]);

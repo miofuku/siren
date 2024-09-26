@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
         .limit(limit)
         .toArray();
     } else {
-      posts = await collection.find({}).toArray();
+      posts = await collection.find({}).sort({ createdAt: -1 }).toArray();
     }
 
     return NextResponse.json(posts);
