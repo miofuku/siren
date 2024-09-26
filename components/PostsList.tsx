@@ -2,27 +2,30 @@
 
 import { useEffect, useState } from 'react';
 import Post from './Post';
-import MapComponent from './Map';
 
-const PostsList = () => {
+interface PostsListProps {
+  limit?: number;
+}
+
+const PostsList: React.FC<PostsListProps> = ({ limit }) => {
   const [posts, setPosts] = useState([]);
 
   useEffect(() => {
     async function fetchPosts() {
-      const response = await fetch('/api/posts');
+      const url = limit ? `/api/posts?limit=${limit}` : '/api/posts';
+      const response = await fetch(url);
       const data = await response.json();
       setPosts(data);
     }
     fetchPosts();
-  }, []);
+  }, [limit]);
 
   return (
-    <>
-      <MapComponent posts={posts} />
+    <div>
       {posts.map((post) => (
-        <Post key={post.id} {...post} />
+        <Post key={post._id} {...post} />
       ))}
-    </>
+    </div>
   );
 };
 
