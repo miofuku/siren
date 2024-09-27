@@ -16,6 +16,16 @@ const ClientPostPage = ({ post }) => {
               <span className="font-semibold">Created at:</span> 
               {new Date(post.createdAt).toLocaleString()}
             </p>
+            <div className="mb-4">
+              <h2 className="text-xl font-semibold mb-2">Locations:</h2>
+              <ul>
+                {post.locations.map((location, index) => (
+                  <li key={index}>
+                    Latitude: {location.coordinates[1]}, Longitude: {location.coordinates[0]}
+                  </li>
+                ))}
+              </ul>
+            </div>
             <div className="h-64 w-full mb-4">
               <Map posts={[post]} />
             </div>

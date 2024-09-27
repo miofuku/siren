@@ -8,13 +8,15 @@ const containerStyle = {
   height: '100%'
 }
 
+interface Location {
+  type: string
+  coordinates: [number, number]
+}
+
 interface Post {
   _id: string
   title: string
-  location: {
-    type: string
-    coordinates: [number, number]
-  }
+  locations: Location[]
 }
 
 interface MapProps {
@@ -28,8 +30,8 @@ export default function Map({ posts }: MapProps) {
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!
   })
 
-  const center = posts.length > 0 
-    ? { lat: posts[0].location.coordinates[1], lng: posts[0].location.coordinates[0] }
+  const center = posts.length > 0 && posts[0].locations.length > 0
+    ? { lat: posts[0].locations[0].coordinates[1], lng: posts[0].locations[0].coordinates[0] }
     : { lat: 0, lng: 0 }
 
   useEffect(() => {
@@ -56,16 +58,18 @@ export default function Map({ posts }: MapProps) {
       onLoad={onLoad}
       onUnmount={onUnmount}
     >
-      {posts.map((post) => (
-        <Marker
-          key={post._id}
-          position={{
-            lat: post.location.coordinates[1],
-            lng: post.location.coordinates[0]
-          }}
-          title={post.title}
-        />
-      ))}
+      {posts.flatMap((post) =>
+        post.locations.map((location, index) => (
+          <Marker
+            key={`${post._id}-${index}`}
+            position={{
+              lat: location.coordinates[1],
+              lng: location.coordinates[0]
+            }}
+            title={post.title}
+          />
+        ))
+      )}
     </GoogleMap>
   )
 }

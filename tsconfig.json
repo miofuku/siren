@@ -36,7 +36,7 @@
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts"
-, "app/posts/[id]/page.jsx"  ],
+, "app/posts/[id]/page.jsx", "tsconfig.script.json"  ],
   "exclude": [
     "node_modules"
   ]
