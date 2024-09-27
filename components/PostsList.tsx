@@ -3,12 +3,26 @@
 import { useEffect, useState } from 'react';
 import Post from './Post';
 
+interface SerializedPost {
+  _id: string;
+  title: string;
+  content: string;
+  type: string;
+  locations: Array<{
+    type: string;
+    coordinates: [number, number];
+  }>;
+  author: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 interface PostsListProps {
   limit?: number;
 }
 
 const PostsList: React.FC<PostsListProps> = ({ limit }) => {
-  const [posts, setPosts] = useState([]);
+  const [posts, setPosts] = useState<SerializedPost[]>([]);
 
   useEffect(() => {
     async function fetchPosts() {
@@ -18,11 +32,10 @@ const PostsList: React.FC<PostsListProps> = ({ limit }) => {
         if (!response.ok) {
           throw new Error('Failed to fetch posts');
         }
-        const data = await response.json();
+        const data: SerializedPost[] = await response.json();
         setPosts(data);
       } catch (error) {
         console.error('Error fetching posts:', error);
-        // You might want to set an error state here and display it to the user
       }
     }
     fetchPosts();
