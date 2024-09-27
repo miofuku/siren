@@ -21,7 +21,7 @@ const ClientPostPage = ({ post }) => {
               <ul>
                 {post.locations.map((location, index) => (
                   <li key={index}>
-                    Latitude: {location.coordinates[1]}, Longitude: {location.coordinates[0]}
+                    {location.placeName}
                   </li>
                 ))}
               </ul>
