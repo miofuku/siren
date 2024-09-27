@@ -12,20 +12,39 @@ const LocationSchema = z.object({
   placeName: z.string()
 });
 
-// Custom Zod schema for ObjectId
-const ObjectIdSchema = z.string().refine(
-  (val) => ObjectId.isValid(val),
-  { message: "Invalid ObjectId" }
-);
+const ResourceSchema = z.object({
+  title: z.string(),
+  url: z.string().url()
+});
+
+const MissingPersonDetailsSchema = z.object({
+  name: z.string(),
+  age: z.number().int().positive(),
+  lastSeen: z.string()
+});
+
+const HazardDetailsSchema = z.object({
+  hazardType: z.string(),
+  severity: z.enum(['low', 'medium', 'high'])
+});
+
+const CrimeDetailsSchema = z.object({
+  crimeType: z.string(),
+  suspectDescription: z.string().optional()
+});
 
 const PostSchema = z.object({
   title: z.string().min(1).max(100),
   content: z.string().min(1).max(1000),
-  type: z.enum(["alert", "missing_person", "event", "other"]),
+  type: z.enum(["missing_person", "hazard_warning", "crime_warning", "other"]),
   locations: z.array(LocationSchema).min(1).max(5),
-  author: ObjectIdSchema,
-  createdAt: z.string().transform(str => new Date(str)),
-  updatedAt: z.string().transform(str => new Date(str))
+  author: z.instanceof(ObjectId),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+  resources: z.array(ResourceSchema),
+  missingPersonDetails: MissingPersonDetailsSchema.optional(),
+  hazardDetails: HazardDetailsSchema.optional(),
+  crimeDetails: CrimeDetailsSchema.optional()
 });
 
 function serializeDocument(doc: any) {
