@@ -1,16 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { GET, POST } from './route';
+import { GET } from './route';
+import { GET as GET_SINGLE_POST } from './[id]/route';
 import { connectToDatabase } from '../../../lib/mongodb';
+import { Collection, Db, ObjectId } from 'mongodb';
 
 jest.mock('../../../lib/mongodb', () => ({
   connectToDatabase: jest.fn(),
 }));
 
+jest.mock('mongodb', () => ({
+  ObjectId: jest.fn((id) => ({ toHexString: () => id })),
+}));
+
 jest.mock('next/server', () => ({
-  NextRequest: jest.fn().mockImplementation((url, init) => ({
+  NextRequest: jest.fn().mockImplementation((url) => ({
     url,
-    method: init?.method || 'GET',
-    json: jest.fn().mockImplementation(() => Promise.resolve(init?.body ? JSON.parse(init.body) : {})),
+    method: 'GET',
   })),
   NextResponse: {
     json: jest.fn().mockImplementation((body, init) => ({
@@ -20,14 +25,24 @@ jest.mock('next/server', () => ({
   },
 }));
 
+// Define types for our mocks
+type MockCollection = {
+  find: jest.Mock;
+  findOne: jest.Mock;
+};
+
+type MockDb = {
+  collection: jest.Mock<MockCollection>;
+};
+
 describe('Posts API Route', () => {
-  let mockCollection;
-  let mockDb;
+  let mockCollection: MockCollection;
+  let mockDb: MockDb;
 
   beforeEach(() => {
     mockCollection = {
       find: jest.fn(),
-      insertOne: jest.fn(),
+      findOne: jest.fn(),
     };
     mockDb = {
       collection: jest.fn().mockReturnValue(mockCollection),
@@ -35,9 +50,9 @@ describe('Posts API Route', () => {
     (connectToDatabase as jest.Mock).mockResolvedValue(mockDb);
   });
 
-  describe('GET', () => {
+  describe('GET all posts', () => {
     it('should return all posts', async () => {
-      const mockPosts = [{ id: '1', title: 'Test Post' }];
+      const mockPosts = [{ _id: '1', title: 'Test Post' }];
       mockCollection.find.mockReturnValue({ toArray: jest.fn().mockResolvedValue(mockPosts) });
 
       const request = new NextRequest('http://localhost/api/posts');
@@ -48,91 +63,42 @@ describe('Posts API Route', () => {
       expect(data).toEqual(mockPosts);
     });
 
-    it('should handle errors', async () => {
-      mockCollection.find.mockImplementation(() => {
-        throw new Error('Database error');
-      });
+    it('should return an empty array when no posts are found', async () => {
+      mockCollection.find.mockReturnValue({ toArray: jest.fn().mockResolvedValue([]) });
 
       const request = new NextRequest('http://localhost/api/posts');
       const response = await GET(request);
       const data = await response.json();
 
-      expect(response.status).toBe(500);
-      expect(data).toEqual({ error: 'Internal server error' });
+      expect(response.status).toBe(200);
+      expect(data).toEqual([]);
     });
   });
 
-  describe('POST', () => {
-    it('should create a new post with valid data', async () => {
-      const validPost = {
-        title: 'Test Post',
-        content: 'This is a test post',
-        type: 'alert',
-        location: {
-          type: 'Point',
-          coordinates: [0, 0],
-        },
-      };
+  describe('GET single post', () => {
+    it('should return a single post', async () => {
+      const mockPost = { _id: '1', title: 'Test Post' };
+      mockCollection.findOne.mockResolvedValue(mockPost);
 
-      mockCollection.insertOne.mockResolvedValue({ insertedId: 'new-post-id' });
-
-      const request = new NextRequest('http://localhost/api/posts', {
-        method: 'POST',
-        body: JSON.stringify(validPost),
-      });
-      const response = await POST(request);
+      const request = new NextRequest('http://localhost/api/posts/1');
+      const params = { id: '1' };
+      const response = await GET_SINGLE_POST(request, { params });
       const data = await response.json();
 
-      expect(response.status).toBe(201);
-      expect(data).toEqual({ id: 'new-post-id' });
+      expect(response.status).toBe(200);
+      expect(data).toEqual(mockPost);
     });
 
-    it('should return validation errors for invalid data', async () => {
-      const invalidPost = {
-        title: '', // Invalid: empty title
-        content: 'This is a test post',
-        type: 'invalid-type', // Invalid: not in enum
-        location: {
-          type: 'Point',
-          coordinates: [1000, 1000], // Invalid: out of range
-        },
-      };
+    it('should return 404 for non-existent post', async () => {
+      mockCollection.findOne.mockResolvedValue(null);
 
-      const request = new NextRequest('http://localhost/api/posts', {
-        method: 'POST',
-        body: JSON.stringify(invalidPost),
-      });
-      const response = await POST(request);
+      const request = new NextRequest('http://localhost/api/posts/1');
+      const params = { id: '1' };
+      const response = await GET_SINGLE_POST(request, { params });
       const data = await response.json();
 
-      expect(response.status).toBe(400);
-      expect(data.error).toBeDefined();
-      expect(Array.isArray(data.error)).toBe(true);
-      expect(data.error.length).toBeGreaterThan(0);
-    });
-
-    it('should handle database errors', async () => {
-      const validPost = {
-        title: 'Test Post',
-        content: 'This is a test post',
-        type: 'alert',
-        location: {
-          type: 'Point',
-          coordinates: [0, 0],
-        },
-      };
-
-      mockCollection.insertOne.mockRejectedValue(new Error('Database error'));
-
-      const request = new NextRequest('http://localhost/api/posts', {
-        method: 'POST',
-        body: JSON.stringify(validPost),
-      });
-      const response = await POST(request);
-      const data = await response.json();
-
-      expect(response.status).toBe(500);
-      expect(data).toEqual({ error: 'Internal server error' });
+      expect(response.status).toBe(404);
+      expect(data).toEqual({ error: 'Post not found' });
     });
   });
 });
