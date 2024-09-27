@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { connectToDatabase } from '../../../lib/mongodb'
 import { ObjectId } from 'mongodb'
+import { getToken } from 'next-auth/jwt'
 import { z } from 'zod'
 
 const LocationSchema = z.object({
@@ -37,14 +38,11 @@ const PostSchema = z.object({
   title: z.string().min(1).max(100),
   content: z.string().min(1).max(1000),
   type: z.enum(["missing_person", "hazard_warning", "crime_warning", "other"]),
-  locations: z.array(LocationSchema).min(1).max(5),
-  author: z.string().refine(val => ObjectId.isValid(val), {
-    message: "Invalid ObjectId"
-  }),
-  resources: z.array(ResourceSchema).optional(),
-  missingPersonDetails: MissingPersonDetailsSchema.optional(),
-  hazardDetails: HazardDetailsSchema.optional(),
-  crimeDetails: CrimeDetailsSchema.optional()
+  locations: z.array(z.object({
+    type: z.literal("Point"),
+    coordinates: z.tuple([z.number().min(-180).max(180), z.number().min(-90).max(90)]),
+    placeName: z.string()
+  })).min(1).max(5),
 });
 
 function serializeDocument(doc: any) {
@@ -76,9 +74,7 @@ export async function GET(request: NextRequest) {
     
     const posts = await collection.find({}).limit(limit).toArray()
     
-    const serializedPosts = posts.map(serializeDocument)
-    
-    return NextResponse.json(serializedPosts)
+    return NextResponse.json(posts)
   } catch (error) {
     console.error('Error fetching posts:', error)
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
@@ -87,6 +83,11 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const token = await getToken({ req: request })
+    if (!token || !['admin', 'moderator'].includes(token.role as string)) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
     const db = await connectToDatabase()
     const collection = db.collection('posts')
     
@@ -95,22 +96,81 @@ export async function POST(request: NextRequest) {
     
     const postToInsert = {
       ...validatedData,
-      author: new ObjectId(validatedData.author),
+      author: new ObjectId(token.sub),
       createdAt: new Date(),
       updatedAt: new Date()
     }
     
     const result = await collection.insertOne(postToInsert)
     
-    const insertedDoc = await collection.findOne({ _id: result.insertedId })
-    const serializedDoc = serializeDocument(insertedDoc)
-    
-    return NextResponse.json(serializedDoc, { status: 201 })
+    return NextResponse.json({ id: result.insertedId }, { status: 201 })
   } catch (error) {
     console.error('Error creating post:', error)
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: 'Validation Error', details: error.errors }, { status: 400 })
     }
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
+  }
+}
+
+export async function PUT(request: NextRequest) {
+  try {
+    const token = await getToken({ req: request })
+    if (!token || !['admin', 'moderator'].includes(token.role as string)) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const db = await connectToDatabase()
+    const collection = db.collection('posts')
+    
+    const body = await request.json()
+    const { id, ...updateData } = PostSchema.parse(body)
+    
+    const result = await collection.updateOne(
+      { _id: new ObjectId(id) },
+      { $set: { ...updateData, updatedAt: new Date() } }
+    )
+    
+    if (result.matchedCount === 0) {
+      return NextResponse.json({ error: 'Post not found' }, { status: 404 })
+    }
+    
+    return NextResponse.json({ message: 'Post updated successfully' })
+  } catch (error) {
+    console.error('Error updating post:', error)
+    if (error instanceof z.ZodError) {
+      return NextResponse.json({ error: 'Validation Error', details: error.errors }, { status: 400 })
+    }
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const token = await getToken({ req: request })
+    if (!token || token.role !== 'admin') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const db = await connectToDatabase()
+    const collection = db.collection('posts')
+    
+    const url = new URL(request.url)
+    const id = url.searchParams.get('id')
+    
+    if (!id) {
+      return NextResponse.json({ error: 'Missing post ID' }, { status: 400 })
+    }
+    
+    const result = await collection.deleteOne({ _id: new ObjectId(id) })
+    
+    if (result.deletedCount === 0) {
+      return NextResponse.json({ error: 'Post not found' }, { status: 404 })
+    }
+    
+    return NextResponse.json({ message: 'Post deleted successfully' })
+  } catch (error) {
+    console.error('Error deleting post:', error)
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
   }
 }

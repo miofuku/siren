@@ -15,6 +15,24 @@ async function updateSchema() {
 
     const db = client.db();
 
+    // Update users collection
+    await db.command({
+      collMod: 'users',
+      validator: {
+        $jsonSchema: {
+          bsonType: 'object',
+          required: ['username', 'email', 'password', 'role'],
+          properties: {
+            username: { bsonType: 'string' },
+            email: { bsonType: 'string' },
+            password: { bsonType: 'string' },
+            role: { enum: ['user', 'admin', 'moderator'] }
+          }
+        }
+      }
+    });
+
+    // Update posts collection
     await db.command({
       collMod: 'posts',
       validator: {
@@ -39,43 +57,7 @@ async function updateSchema() {
             },
             author: { bsonType: 'objectId' },
             createdAt: { bsonType: 'date' },
-            updatedAt: { bsonType: 'date' },
-            resources: {
-              bsonType: 'array',
-              items: {
-                bsonType: 'object',
-                required: ['title', 'url'],
-                properties: {
-                  title: { bsonType: 'string' },
-                  url: { bsonType: 'string' }
-                }
-              }
-            },
-            missingPersonDetails: {
-              bsonType: 'object',
-              required: ['name', 'age', 'lastSeen'],
-              properties: {
-                name: { bsonType: 'string' },
-                age: { bsonType: 'int' },
-                lastSeen: { bsonType: 'string' }
-              }
-            },
-            hazardDetails: {
-              bsonType: 'object',
-              required: ['hazardType', 'severity'],
-              properties: {
-                hazardType: { bsonType: 'string' },
-                severity: { enum: ['low', 'medium', 'high'] }
-              }
-            },
-            crimeDetails: {
-              bsonType: 'object',
-              required: ['crimeType'],
-              properties: {
-                crimeType: { bsonType: 'string' },
-                suspectDescription: { bsonType: 'string' }
-              }
-            }
+            updatedAt: { bsonType: 'date' }
           }
         }
       }
