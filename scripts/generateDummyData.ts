@@ -1,56 +1,68 @@
 import dotenv from 'dotenv';
-import { MongoClient, Db, ObjectId, MongoError } from 'mongodb';
+import { MongoClient, Db, ObjectId } from 'mongodb';
+import { z } from 'zod';
 
 dotenv.config();
 
-interface Location {
-  type: "Point";
+const LocationSchema = z.object({
+  type: z.literal("Point"),
+  coordinates: z.tuple([
+    z.number().min(-180).max(180),
+    z.number().min(-90).max(90)
+  ]),
+  placeName: z.string()
+});
+
+const ResourceSchema = z.object({
+  title: z.string(),
+  url: z.string().url()
+});
+
+const MissingPersonDetailsSchema = z.object({
+  name: z.string(),
+  age: z.number().int().positive(),
+  lastSeen: z.string()
+});
+
+const HazardDetailsSchema = z.object({
+  hazardType: z.string(),
+  severity: z.enum(['low', 'medium', 'high'])
+});
+
+const CrimeDetailsSchema = z.object({
+  crimeType: z.string(),
+  suspectDescription: z.string().optional()
+});
+
+const PostSchema = z.object({
+  title: z.string().min(1).max(100),
+  content: z.string().min(1).max(1000),
+  type: z.enum(["missing_person", "hazard_warning", "crime_warning", "other"]),
+  locations: z.array(LocationSchema).min(1).max(5),
+  author: z.instanceof(ObjectId),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+  resources: z.array(ResourceSchema),
+  missingPersonDetails: MissingPersonDetailsSchema.optional(),
+  hazardDetails: HazardDetailsSchema.optional(),
+  crimeDetails: CrimeDetailsSchema.optional()
+});
+
+type Post = z.infer<typeof PostSchema>;
+type Location = z.infer<typeof LocationSchema>;
+
+type City = {
+  name: string;
   coordinates: [number, number];
-  placeName: string;
-}
+};
 
-interface Resource {
-  title: string;
-  url: string;
-}
-
-interface Post {
-  title: string;
-  content: string;
-  type: "missing_person" | "hazard_warning" | "crime_warning" | "other";
-  locations: Location[];
-  author: ObjectId;
-  createdAt: Date;
-  updatedAt: Date;
-  resources: Resource[];
-  missingPersonDetails?: {
-    name: string;
-    age: number;
-    lastSeen: string;
-  };
-  hazardDetails?: {
-    hazardType: string;
-    severity: 'low' | 'medium' | 'high';
-  };
-  crimeDetails?: {
-    crimeType: string;
-    suspectDescription?: string;
-  };
-}
-
-const cities: { name: string; coordinates: [number, number] }[] = [
+const cities: City[] = [
   { name: "New York", coordinates: [-74.006, 40.7128] },
   { name: "Los Angeles", coordinates: [-118.2437, 34.0522] },
   { name: "Chicago", coordinates: [-87.6298, 41.8781] },
   { name: "Houston", coordinates: [-95.3698, 29.7604] },
-  { name: "Phoenix", coordinates: [-112.0740, 33.4484] },
+  { name: "Phoenix", coordinates: [-112.0740, 33.4484] }
 ];
-
-async function cleanupDatabase(db: Db): Promise<void> {
-  console.log('Cleaning up existing data...');
-  await db.collection('posts').deleteMany({});
-  console.log('Existing data cleaned up.');
-}
 
 const generateDummyLocation = (): Location => {
   const city = cities[Math.floor(Math.random() * cities.length)];
@@ -61,15 +73,11 @@ const generateDummyLocation = (): Location => {
   };
 };
 
-const generateDummyResource = (): Resource => {
-  const resources = [
-    { title: "Local Police Department", url: "https://www.police.gov" },
-    { title: "Missing Persons Database", url: "https://www.missingpersons.gov" },
-    { title: "Weather Service", url: "https://www.weather.gov" },
-    { title: "Emergency Services", url: "https://www.emergency.gov" },
-    { title: "Crime Stoppers", url: "https://www.crimestoppers.org" }
-  ];
-  return resources[Math.floor(Math.random() * resources.length)];
+const generateDummyResource = (): z.infer<typeof ResourceSchema> => {
+  return {
+    title: `Resource ${Math.floor(Math.random() * 100)}`,
+    url: `https://example.com/resource${Math.floor(Math.random() * 100)}`
+  };
 };
 
 const generateDummyPost = (): Post => {
@@ -77,12 +85,12 @@ const generateDummyPost = (): Post => {
   const type = types[Math.floor(Math.random() * types.length)];
   const numLocations = Math.floor(Math.random() * 3) + 1; // 1 to 3 locations
   const locations = Array.from({ length: numLocations }, generateDummyLocation);
-  const numResources = Math.floor(Math.random() * 3) + 1; // 1 to 3 resources
+  const numResources = Math.floor(Math.random() * 3); // 0 to 2 resources
   const resources = Array.from({ length: numResources }, generateDummyResource);
-  
-  const basePost: Post = {
-    title: `Dummy ${type.replace('_', ' ')} Post ${Math.floor(Math.random() * 1000)}`,
-    content: `This is a dummy ${type.replace('_', ' ')} post content. ${Math.random().toString(36).substring(7)}`,
+
+  const post: Post = {
+    title: `Dummy ${type} Post ${Math.floor(Math.random() * 1000)}`,
+    content: `This is a dummy ${type} post content. ${Math.random().toString(36).substring(7)}`,
     type,
     locations,
     author: new ObjectId(),
@@ -92,28 +100,28 @@ const generateDummyPost = (): Post => {
   };
 
   switch (type) {
-    case 'missing_person':
-      basePost.missingPersonDetails = {
+    case "missing_person":
+      post.missingPersonDetails = {
         name: `John Doe ${Math.floor(Math.random() * 100)}`,
-        age: Math.floor(Math.random() * 80) + 1,
-        lastSeen: new Date(Date.now() - Math.floor(Math.random() * 30) * 24 * 60 * 60 * 1000).toISOString()
+        age: Math.floor(Math.random() * 50) + 10,
+        lastSeen: new Date().toISOString()
       };
       break;
-    case 'hazard_warning':
-      basePost.hazardDetails = {
-        hazardType: ['Flood', 'Fire', 'Earthquake', 'Hurricane', 'Tornado'][Math.floor(Math.random() * 5)],
-        severity: ['low', 'medium', 'high'][Math.floor(Math.random() * 3)] as 'low' | 'medium' | 'high'
+    case "hazard_warning":
+      post.hazardDetails = {
+        hazardType: ["Flood", "Fire", "Earthquake"][Math.floor(Math.random() * 3)],
+        severity: ["low", "medium", "high"][Math.floor(Math.random() * 3)] as "low" | "medium" | "high"
       };
       break;
-    case 'crime_warning':
-      basePost.crimeDetails = {
-        crimeType: ['Theft', 'Assault', 'Burglary', 'Vandalism'][Math.floor(Math.random() * 4)],
-        suspectDescription: Math.random() > 0.5 ? `Suspect is approximately ${Math.floor(Math.random() * 40) + 20} years old, ${Math.floor(Math.random() * 50) + 150}cm tall` : undefined
+    case "crime_warning":
+      post.crimeDetails = {
+        crimeType: ["Theft", "Assault", "Vandalism"][Math.floor(Math.random() * 3)],
+        suspectDescription: `Suspect is approximately ${Math.floor(Math.random() * 50) + 20} years old, ${Math.floor(Math.random() * 50) + 150}cm tall`
       };
       break;
   }
 
-  return basePost;
+  return post;
 };
 
 async function generateDummyData(count: number): Promise<void> {
@@ -129,10 +137,6 @@ async function generateDummyData(count: number): Promise<void> {
     console.log('Connected to MongoDB');
 
     const db = client.db();
-    
-    // Clean up existing data
-    await cleanupDatabase(db);
-
     const postsCollection = db.collection('posts');
 
     const dummyPosts = Array.from({ length: count }, generateDummyPost);
@@ -143,21 +147,8 @@ async function generateDummyData(count: number): Promise<void> {
     try {
       const result = await postsCollection.insertMany(dummyPosts);
       console.log(`${result.insertedCount} dummy posts inserted successfully`);
-    } catch (error) {
-      if (error instanceof MongoError) {
-        console.error('MongoDB Error inserting documents:', error.message);
-        if (error.code === 121) {  // Document validation error
-          console.error('Document validation failed. Error details:');
-          const bulkWriteError = error as any;  // Type assertion
-          if (bulkWriteError.writeErrors) {
-            bulkWriteError.writeErrors.forEach((writeError: any, index: number) => {
-              console.error(`Error in document ${index}:`, writeError.errmsg);
-            });
-          }
-        }
-      } else {
-        console.error('Unknown error inserting documents:', error);
-      }
+    } catch (insertError) {
+      console.error('Error inserting documents:', insertError);
     }
   } catch (error) {
     console.error('Error generating dummy data:', error);
@@ -168,6 +159,6 @@ async function generateDummyData(count: number): Promise<void> {
 }
 
 // Usage: Call this function with the number of dummy posts you want to generate
-generateDummyData(10);
+generateDummyData(5);
 
 export { generateDummyData };

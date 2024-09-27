@@ -38,10 +38,10 @@ const PostSchema = z.object({
   content: z.string().min(1).max(1000),
   type: z.enum(["missing_person", "hazard_warning", "crime_warning", "other"]),
   locations: z.array(LocationSchema).min(1).max(5),
-  author: z.instanceof(ObjectId),
-  createdAt: z.date(),
-  updatedAt: z.date(),
-  resources: z.array(ResourceSchema),
+  author: z.string().refine(val => ObjectId.isValid(val), {
+    message: "Invalid ObjectId"
+  }),
+  resources: z.array(ResourceSchema).optional(),
   missingPersonDetails: MissingPersonDetailsSchema.optional(),
   hazardDetails: HazardDetailsSchema.optional(),
   crimeDetails: CrimeDetailsSchema.optional()
@@ -93,15 +93,15 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const validatedData = PostSchema.parse(body)
     
-    // Convert author string to ObjectId
     const postToInsert = {
       ...validatedData,
-      author: new ObjectId(validatedData.author)
+      author: new ObjectId(validatedData.author),
+      createdAt: new Date(),
+      updatedAt: new Date()
     }
     
     const result = await collection.insertOne(postToInsert)
     
-    // Serialize the inserted document for the response
     const insertedDoc = await collection.findOne({ _id: result.insertedId })
     const serializedDoc = serializeDocument(insertedDoc)
     
