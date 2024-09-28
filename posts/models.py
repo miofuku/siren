@@ -3,8 +3,8 @@ from django.contrib.auth import get_user_model
 
 User = get_user_model()
 
-
 class Post(models.Model):
+    id = models.AutoField(primary_key=True)
     title = models.CharField(max_length=200)
     content = models.TextField()
     type = models.CharField(max_length=50)

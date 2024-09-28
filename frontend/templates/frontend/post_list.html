@@ -1,5 +1,5 @@
 {% extends 'frontend/base.html' %}
-{% block title %}InfoShare - Posts{% endblock %}
+{% block title %}InfoShare - Recent Posts{% endblock %}
 {% block content %}
 
 <h1 class="text-3xl font-bold mb-8">Recent Posts</h1>
@@ -16,11 +16,17 @@
             <p>Posted on: {{ post.created_at|date:"F d, Y" }}</p>
             {% if post.id %}
                 <a href="{% url 'post_detail' post.id %}" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Read More</a>
+            {% else %}
+                <span class="text-gray-500">Details unavailable</span>
             {% endif %}
         </div>
     {% empty %}
         <p>No posts available.</p>
     {% endfor %}
+</div>
+
+<div class="mt-8 text-center">
+    <a href="{% url 'all_posts' %}" class="bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600 text-lg font-semibold">View All Posts</a>
 </div>
 
 {% endblock %}
