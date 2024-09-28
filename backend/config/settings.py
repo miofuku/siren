@@ -57,7 +57,7 @@ TEMPLATES = [
 DATABASES = {
     'default': {
         'ENGINE': 'djongo',
-        'NAME': 'your_database_name',
+        'NAME': 'siren',
         'CLIENT': {
             'host': os.getenv('MONGODB_URI'),
         }
@@ -68,8 +68,12 @@ AUTH_USER_MODEL = 'users.CustomUser'
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.TokenAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.BasicAuthentication',
     ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticatedOrReadOnly',
+    ]
 }
 
 # Default primary key field type
