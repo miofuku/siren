@@ -9,6 +9,13 @@
         <p class="text-sm text-gray-500 mb-2">Type: {{ post.type }}</p>
         <p class="text-sm text-gray-500 mb-4">Posted on: {{ post.created_at|date:"F d, Y" }}</p>
 
+        <h2 class="text-xl font-semibold mb-2">Locations:</h2>
+        <ul class="list-disc list-inside mb-4">
+            {% for location in post.locations %}
+                <li>{{ location.name }}</li>
+            {% endfor %}
+        </ul>
+
         <div id="map" class="w-full h-64 mb-4"></div>
 
         <a href="{% url 'post_list' %}" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Back to Posts</a>
@@ -16,14 +23,26 @@
 
     <script>
         function initMap() {
-            var postLocation = {lat: {{ post.location.coordinates.1 }}, lng: {{ post.location.coordinates.0 }}};
+            var locations = {{ post.locations|safe }};
             var map = new google.maps.Map(document.getElementById('map'), {
-                zoom: 12,
-                center: postLocation
+                zoom: 11,
+                center: {lat: locations[0].coordinates[1], lng: locations[0].coordinates[0]}
             });
-            var marker = new google.maps.Marker({
-                position: postLocation,
-                map: map
+
+            locations.forEach(function(location) {
+                var marker = new google.maps.Marker({
+                    position: {lat: location.coordinates[1], lng: location.coordinates[0]},
+                    map: map,
+                    title: location.name
+                });
+
+                var infoWindow = new google.maps.InfoWindow({
+                    content: location.name
+                });
+
+                marker.addListener('click', function() {
+                    infoWindow.open(map, marker);
+                });
             });
         }
     </script>
