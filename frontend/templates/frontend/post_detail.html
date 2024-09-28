@@ -1,45 +1,45 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ post.title }}</title>
-    <script src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key }}&callback=initMap" async defer></script>
-    <script>
-        function initMap() {
-            const locations = {{ post.locations|safe }};
-            const map = new google.maps.Map(document.getElementById('map'), {
-                zoom: 10,
-                center: { lat: locations[0].coordinates[1], lng: locations[0].coordinates[0] }
-            });
+{% extends 'frontend/base.html' %}
 
-            locations.forEach(location => {
-                new google.maps.Marker({
-                    position: { lat: location.coordinates[1], lng: location.coordinates[0] },
-                    map: map,
-                    title: location.name
-                });
-            });
-        }
-    </script>
-    <style>
-        #map { height: 400px; width: 100%; }
-    </style>
-</head>
-<body>
-    <div class="container mx-auto mt-8">
-        <h1 class="text-3xl font-bold mb-4">{{ post.title }}</h1>
-        <p class="mb-4">{{ post.content }}</p>
-        <p class="mb-2"><strong>Type:</strong> {{ post.type }}</p>
-        <p class="mb-2"><strong>Posted on:</strong> {{ post.created_at|date:"F d, Y" }}</p>
-        <h2 class="text-xl font-semibold mb-2">Locations:</h2>
-        <ul class="list-disc pl-5 mb-4">
-            {% for location in post.locations %}
-                <li>{{ location.name }}</li>
-            {% endfor %}
-        </ul>
-        <div id="map" class="mb-4"></div>
-        <a href="{% url 'post_list' %}" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Back to Posts</a>
-    </div>
-</body>
-</html>
+{% block extra_head %}
+<style>
+    #map {
+        height: 400px;
+        width: 100%;
+    }
+</style>
+<script>
+    function initMap() {
+        const location = { lat: {{ post.locations.0.latitude }}, lng: {{ post.locations.0.longitude }} };
+        const map = new google.maps.Map(document.getElementById("map"), {
+            zoom: 10,
+            center: location,
+        });
+        const marker = new google.maps.Marker({
+            position: location,
+            map: map,
+        });
+    }
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="bg-white rounded-lg shadow-md p-6">
+    <h1 class="text-3xl font-bold mb-4">{{ post.title }}</h1>
+
+    <p class="mb-4">{{ post.content }}</p>
+
+    <p class="text-sm text-gray-600"><strong>Type:</strong> {{ post.type }}</p>
+    <p class="text-sm text-gray-600 mb-4"><strong>Posted on:</strong> {{ post.created_at|date:"F d, Y" }}</p>
+
+    <h2 class="text-xl font-semibold mb-2">Locations:</h2>
+    <ul class="mb-4">
+        {% for location in post.locations %}
+        <li>{{ location.name }}</li>
+        {% endfor %}
+    </ul>
+    
+    <div id="map" class="mb-4"></div>
+    
+    <a href="{% url 'post_list' %}" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Back to Posts</a>
+</div>
+{% endblock %}

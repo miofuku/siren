@@ -1,22 +1,24 @@
-{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}InfoShare{% endblock %}</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key }}&callback=initMap" async defer></script>
+    {% block extra_head %}{% endblock %}
 </head>
 <body class="bg-gray-100">
-    <nav class="bg-blue-500 p-4 text-white">
+    <nav class="bg-blue-600 text-white p-4">
         <div class="container mx-auto">
             <a href="{% url 'post_list' %}" class="text-2xl font-bold">InfoShare</a>
         </div>
     </nav>
-    <div class="container mx-auto mt-8">
-        {% block content %}
-        {% endblock %}
+
+    <div class="container mx-auto mt-8 px-4">
+        {% block content %}{% endblock %}
     </div>
+
+    {% block extra_body %}{% endblock %}
 </body>
 </html>
