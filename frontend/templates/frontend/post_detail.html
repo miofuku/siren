@@ -29,7 +29,9 @@
 
     <a href="{% url 'post_list' %}" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Back to Posts</a>
 </div>
+{% endblock %}
 
+{% block extra_body %}
 <script>
 function initMap() {
     const bounds = new google.maps.LatLngBounds();
@@ -37,17 +39,41 @@ function initMap() {
         zoom: 10,
     });
 
-    {% for location in post.locations %}
-    const position = { lat: {{ location.coordinates.1 }}, lng: {{ location.coordinates.0 }} };
-    const marker = new google.maps.Marker({
-        position: position,
-        map: map,
-        title: "{{ location.name }}"
+    const locations = [
+        {% for location in post.locations %}
+        {
+            name: "{{ location.name }}",
+            lat: {{ location.coordinates.1 }},
+            lng: {{ location.coordinates.0 }}
+        },
+        {% endfor %}
+    ];
+
+    locations.forEach(function(loc) {
+        const position = { lat: loc.lat, lng: loc.lng };
+        const marker = new google.maps.Marker({
+            position: position,
+            map: map,
+            title: loc.name
+        });
+        bounds.extend(position);
     });
-    bounds.extend(position);
-    {% endfor %}
 
     map.fitBounds(bounds);
+}
+
+function loadGoogleMaps() {
+    const script = document.createElement('script');
+    script.src = `https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key }}&callback=initMap`;
+    script.async = true;
+    script.defer = true;
+    document.head.appendChild(script);
+}
+
+if (window.google && window.google.maps) {
+    initMap();
+} else {
+    window.addEventListener('load', loadGoogleMaps);
 }
 </script>
 {% endblock %}
