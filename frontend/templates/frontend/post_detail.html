@@ -7,19 +7,6 @@
         width: 100%;
     }
 </style>
-<script>
-    function initMap() {
-        const location = { lat: {{ post.locations.0.latitude }}, lng: {{ post.locations.0.longitude }} };
-        const map = new google.maps.Map(document.getElementById("map"), {
-            zoom: 10,
-            center: location,
-        });
-        const marker = new google.maps.Marker({
-            position: location,
-            map: map,
-        });
-    }
-</script>
 {% endblock %}
 
 {% block content %}
@@ -37,9 +24,30 @@
         <li>{{ location.name }}</li>
         {% endfor %}
     </ul>
-    
+
     <div id="map" class="mb-4"></div>
-    
+
     <a href="{% url 'post_list' %}" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Back to Posts</a>
 </div>
+
+<script>
+function initMap() {
+    const bounds = new google.maps.LatLngBounds();
+    const map = new google.maps.Map(document.getElementById("map"), {
+        zoom: 10,
+    });
+
+    {% for location in post.locations %}
+    const position = { lat: {{ location.coordinates.1 }}, lng: {{ location.coordinates.0 }} };
+    const marker = new google.maps.Marker({
+        position: position,
+        map: map,
+        title: "{{ location.name }}"
+    });
+    bounds.extend(position);
+    {% endfor %}
+
+    map.fitBounds(bounds);
+}
+</script>
 {% endblock %}

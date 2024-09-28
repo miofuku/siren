@@ -6,7 +6,6 @@ import random
 
 User = get_user_model()
 
-
 class Command(BaseCommand):
     help = 'Creates sample posts for the InfoShare platform'
 
@@ -27,23 +26,19 @@ class Command(BaseCommand):
         locations = [
             {
                 'name': 'New York Public Library',
-                'latitude': 40.7532,
-                'longitude': -73.9822
+                'coordinates': [-73.9822, 40.7532]
             },
             {
                 'name': 'Barclays Center',
-                'latitude': 40.6828,
-                'longitude': -73.9758
+                'coordinates': [-73.9758, 40.6828]
             },
             {
                 'name': 'Bryant Park',
-                'latitude': 40.7536,
-                'longitude': -73.9832
+                'coordinates': [-73.9832, 40.7536]
             },
             {
                 'name': 'East Village',
-                'latitude': 40.7264,
-                'longitude': -73.9818
+                'coordinates': [-73.9818, 40.7264]
             }
         ]
 
@@ -52,25 +47,25 @@ class Command(BaseCommand):
                 'title': 'Book Donation Drive',
                 'content': 'Donate your used books at any of these locations to support local libraries!',
                 'type': 'community_event',
-                'locations': [locations[0]]
+                'locations': [locations[0], locations[1]]
             },
             {
                 'title': 'New COVID-19 Testing Sites',
                 'content': 'Additional COVID-19 testing sites have been set up at these locations.',
                 'type': 'public_service',
-                'locations': [locations[1]]
+                'locations': [locations[1], locations[2]]
             },
             {
                 'title': 'Free Yoga Classes in Parks',
                 'content': 'Join us for free yoga classes every Saturday morning at these locations!',
                 'type': 'community_event',
-                'locations': [locations[2]]
+                'locations': [locations[2], locations[3]]
             },
             {
                 'title': 'Bike Theft Warning',
                 'content': 'There have been reports of increased bike thefts in these areas. Please be cautious!',
                 'type': 'crime_warning',
-                'locations': [locations[3]]
+                'locations': [locations[3], locations[0]]
             }
         ]
 
