@@ -1,21 +1,26 @@
 {% extends 'frontend/base.html' %}
-
 {% block title %}InfoShare - Posts{% endblock %}
-
 {% block content %}
-    <h1 class="text-3xl font-bold mb-8">Recent Posts</h1>
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {% for post in posts %}
-            <div class="bg-white rounded-lg shadow-md p-6">
-                <h2 class="text-xl font-semibold mb-2">{{ post.title }}</h2>
-                <p class="text-gray-600 mb-4">{{ post.content|truncatewords:20 }}</p>
-                <p class="text-sm text-gray-500 mb-2">Type: {{ post.type }}</p>
-                <p class="text-sm text-gray-500 mb-2">Location: {{ post.locations.0.name }}</p>
-                <p class="text-sm text-gray-500 mb-4">Posted on: {{ post.created_at|date:"F d, Y" }}</p>
+
+<h1 class="text-3xl font-bold mb-8">Recent Posts</h1>
+
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    {% for post in posts %}
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-xl font-semibold mb-2">{{ post.title }}</h2>
+            <p>{{ post.content|truncatewords:20 }}</p>
+            <p>Type: {{ post.type }}</p>
+            {% if post.locations.0 %}
+                <p>Location: {{ post.locations.0.name }}</p>
+            {% endif %}
+            <p>Posted on: {{ post.created_at|date:"F d, Y" }}</p>
+            {% if post.id %}
                 <a href="{% url 'post_detail' post.id %}" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Read More</a>
-            </div>
-        {% empty %}
-            <p>No posts available.</p>
-        {% endfor %}
-    </div>
+            {% endif %}
+        </div>
+    {% empty %}
+        <p>No posts available.</p>
+    {% endfor %}
+</div>
+
 {% endblock %}
