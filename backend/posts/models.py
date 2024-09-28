@@ -1,26 +1,28 @@
-from mongoengine import Document, StringField, ReferenceField, DateTimeField, PointField, ListField, EmbeddedDocument, \
-    EmbeddedDocumentField
+from django.db import models
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
 
 
-class Comment(EmbeddedDocument):
-    content = StringField(required=True)
-    author = ReferenceField(CustomUser)
-    created_at = DateTimeField()
-
-
-class Post(Document):
-    TYPE_CHOICES = (
+class Post(models.Model):
+    TYPE_CHOICES = [
         ('missing_person', 'Missing Person'),
         ('hazard_warning', 'Hazard Warning'),
         ('crime_warning', 'Crime Warning'),
         ('other', 'Other'),
-    )
+    ]
 
-    title = StringField(max_length=200, required=True)
-    content = StringField(required=True)
-    type = StringField(max_length=20, choices=TYPE_CHOICES)
-    location = PointField()
-    author = ReferenceField(CustomUser)
-    created_at = DateTimeField()
-    updated_at = DateTimeField()
-    comments = ListField(EmbeddedDocumentField(Comment))
+    title = models.CharField(max_length=200)
+    content = models.TextField()
+    type = models.CharField(max_length=20, choices=TYPE_CHOICES)
+    location = models.JSONField()  # Store location as JSON
+    author = models.ForeignKey(User, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+
+class Comment(models.Model):
+    post = models.ForeignKey(Post, related_name='comments', on_delete=models.CASCADE)
+    author = models.ForeignKey(User, on_delete=models.CASCADE)
+    content = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)

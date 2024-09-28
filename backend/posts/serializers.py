@@ -1,18 +1,18 @@
-from rest_framework_mongoengine import serializers
+from rest_framework import serializers
 from .models import Post, Comment
 
 
-class CommentSerializer(serializers.EmbeddedDocumentSerializer):
-    author = serializers.StringField(source='author.username')
+class CommentSerializer(serializers.ModelSerializer):
+    author = serializers.ReadOnlyField(source='author.username')
 
     class Meta:
         model = Comment
-        fields = ['content', 'author', 'created_at']
+        fields = ['id', 'content', 'author', 'created_at']
 
 
-class PostSerializer(serializers.DocumentSerializer):
-    author = serializers.StringField(source='author.username')
-    comments = CommentSerializer(many=True)
+class PostSerializer(serializers.ModelSerializer):
+    author = serializers.ReadOnlyField(source='author.username')
+    comments = CommentSerializer(many=True, read_only=True)
 
     class Meta:
         model = Post
