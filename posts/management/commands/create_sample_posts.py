@@ -7,7 +7,7 @@ import random
 User = get_user_model()
 
 class Command(BaseCommand):
-    help = 'Creates sample posts for the InfoShare platform'
+    help = 'Creates 10 sample posts for the InfoShare platform'
 
     def handle(self, *args, **kwargs):
         # Ensure we have a user to associate with posts
@@ -39,45 +39,35 @@ class Command(BaseCommand):
             {
                 'name': 'East Village',
                 'coordinates': [-73.9818, 40.7264]
+            },
+            {
+                'name': 'Central Park',
+                'coordinates': [-73.9665, 40.7829]
             }
         ]
 
-        posts_data = [
-            {
-                'title': 'Book Donation Drive',
-                'content': 'Donate your used books at any of these locations to support local libraries!',
-                'type': 'community_event',
-                'locations': [locations[0], locations[1]]
-            },
-            {
-                'title': 'New COVID-19 Testing Sites',
-                'content': 'Additional COVID-19 testing sites have been set up at these locations.',
-                'type': 'public_service',
-                'locations': [locations[1], locations[2]]
-            },
-            {
-                'title': 'Free Yoga Classes in Parks',
-                'content': 'Join us for free yoga classes every Saturday morning at these locations!',
-                'type': 'community_event',
-                'locations': [locations[2], locations[3]]
-            },
-            {
-                'title': 'Bike Theft Warning',
-                'content': 'There have been reports of increased bike thefts in these areas. Please be cautious!',
-                'type': 'crime_warning',
-                'locations': [locations[3], locations[0]]
-            }
+        titles = [
+            "Community Clean-up Day",
+            "Free Health Check-up Camp",
+            "Local Art Exhibition",
+            "Neighborhood Watch Meeting",
+            "Farmers Market Opening",
+            "Street Fair Announcement",
+            "Emergency Preparedness Workshop",
+            "Lost Pet Alert",
+            "Traffic Diversion Notice",
+            "Volunteer Recruitment Drive"
         ]
 
-        for post_data in posts_data:
+        for i in range(10):
             post = Post.objects.create(
-                title=post_data['title'],
-                content=post_data['content'],
-                type=post_data['type'],
-                locations=post_data['locations'],
+                title=titles[i],
+                content=f"This is sample content for the post: {titles[i]}. Please check the details and participate!",
+                type=random.choice(post_types),
+                locations=[random.choice(locations)],
                 author=user,
-                created_at=timezone.now() - timezone.timedelta(days=random.randint(0, 30))
+                created_at=timezone.now() - timezone.timedelta(days=random.uniform(0, 4))  # Random time within the last 4 days
             )
             self.stdout.write(self.style.SUCCESS(f'Successfully created post: {post.title}'))
 
-        self.stdout.write(self.style.SUCCESS('Successfully created sample posts'))
+        self.stdout.write(self.style.SUCCESS('Successfully created 10 sample posts'))
