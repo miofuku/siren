@@ -1,8 +1,7 @@
 from django.urls import path
-from . import views
+from .views import ReactAppView
 
 urlpatterns = [
-    path('', views.post_list, name='post_list'),
-    path('post/<str:pk>/', views.post_detail, name='post_detail'),
-    path('all-posts/', views.all_posts, name='all_posts'),
+    path('', ReactAppView.as_view(), name='react_app'),
+    path('post/<str:pk>/', ReactAppView.as_view(), name='post_detail'),
 ]

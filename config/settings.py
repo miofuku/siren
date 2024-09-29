@@ -25,9 +25,11 @@ INSTALLED_APPS = [
     'users',
     'posts',
     'frontend',
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -35,6 +37,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
 ]
 
 ROOT_URLCONF = 'config.urls'
@@ -42,7 +45,7 @@ ROOT_URLCONF = 'config.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, 'frontend_react', 'build')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -92,8 +95,11 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # This setting will tell Django to look for static files in a 'static' folder within each app
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static'),
+    os.path.join(BASE_DIR, 'frontend_react', 'build', 'static'),
 ]
+
+# For serving static files with WhiteNoise
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Media files (User uploaded files)
 MEDIA_URL = '/media/'
@@ -101,3 +107,6 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Add this somewhere in your settings file
 GOOGLE_MAPS_API_KEY = os.getenv('GOOGLE_MAPS_API_KEY')
+
+# During development, allow all origins
+CORS_ALLOW_ALL_ORIGINS = True  # Set this to False in production

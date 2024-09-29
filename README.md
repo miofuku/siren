@@ -69,7 +69,7 @@ InfoShare is a web application for sharing and discovering local information, ev
    npm start
    ```
 
-3. Access the application at `http://localhost:8000`
+3. Access the application at `http://localhost:3000`
 
 ## API Endpoints
 
