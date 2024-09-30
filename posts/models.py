@@ -1,11 +1,12 @@
 from djongo import models
 from django.contrib.auth import get_user_model
+from bson import ObjectId
 
 User = get_user_model()
 
 
 class Post(models.Model):
-    _id = models.ObjectIdField()
+    _id = models.ObjectIdField(primary_key=True, default=ObjectId)
     title = models.CharField(max_length=200)
     content = models.TextField()
     type = models.CharField(max_length=50)
@@ -16,7 +17,3 @@ class Post(models.Model):
 
     def __str__(self):
         return self.title
-
-    @property
-    def id(self):
-        return str(self._id)

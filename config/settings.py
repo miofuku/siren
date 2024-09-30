@@ -24,7 +24,6 @@ INSTALLED_APPS = [
     'api',
     'users',
     'posts',
-    'frontend',
     'corsheaders',
 ]
 
@@ -77,7 +76,11 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticatedOrReadOnly',
-    ]
+    ],
+    'DEFAULT_RENDERER_CLASSES': [
+        'custom_renderers.CustomJSONRenderer',
+        'rest_framework.renderers.BrowsableAPIRenderer',
+    ],
 }
 
 # Default primary key field type
