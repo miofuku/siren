@@ -108,8 +108,9 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 # Add this somewhere in your settings file
 GOOGLE_MAPS_API_KEY = os.getenv('GOOGLE_MAPS_API_KEY')
 
-# During development, allow all origins
-CORS_ALLOW_ALL_ORIGINS = True  # Set this to False in production
+CORS_ALLOWED_ORIGINS = [
+       "http://localhost:3000",
+   ]
 
 # This will allow React Router to handle routes
 APPEND_SLASH = False
