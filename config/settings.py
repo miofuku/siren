@@ -90,11 +90,8 @@ ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '').split(',')
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-
-# This setting will tell Django to look for static files in a 'static' folder within each app
 STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static'),
     os.path.join(BASE_DIR, 'frontend_react', 'build', 'static'),
 ]
 
@@ -110,3 +107,6 @@ GOOGLE_MAPS_API_KEY = os.getenv('GOOGLE_MAPS_API_KEY')
 
 # During development, allow all origins
 CORS_ALLOW_ALL_ORIGINS = True  # Set this to False in production
+
+# This will allow React Router to handle routes
+APPEND_SLASH = False
