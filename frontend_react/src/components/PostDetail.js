@@ -11,7 +11,7 @@ function PostDetail() {
   useEffect(() => {
     const fetchPost = async () => {
       try {
-        const response = await axios.get(`/api/posts/${id}/`);
+        const response = await axios.get(`http://localhost:8000/api/posts/${id}/`);
         setPost(response.data);
         setLoading(false);
       } catch (error) {
@@ -23,18 +23,21 @@ function PostDetail() {
     fetchPost();
   }, [id]);
 
-  if (loading) return <div>Loading...</div>;
-  if (error) return <div>Error: {error}</div>;
+  if (loading) return <div className="text-center">Loading...</div>;
+  if (error) return <div className="text-red-500 text-center">{error}</div>;
   if (!post) return null;
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
-      <h1>{post.title}</h1>
-      <p>{post.content}</p>
-      <p>Author: {post.author}</p>
-      <p>Type: {post.type}</p>
-      <p>Created at: {new Date(post.created_at).toLocaleString()}</p>
-      <Link to="/" className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+    <div className="bg-white rounded-lg shadow-md p-6 max-w-2xl mx-auto">
+      <h1 className="text-3xl font-bold mb-4">{post.title}</h1>
+      <p className="text-gray-600 mb-4">{post.content}</p>
+      <p className="text-sm text-gray-500 mb-2">Author: {post.author}</p>
+      <p className="text-sm text-gray-500 mb-4">Type: {post.type}</p>
+      <p className="text-sm text-gray-500 mb-6">Created at: {new Date(post.created_at).toLocaleString()}</p>
+      <Link
+        to="/"
+        className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition duration-300"
+      >
         Back to Posts
       </Link>
     </div>
