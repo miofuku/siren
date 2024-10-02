@@ -26,22 +26,27 @@ class Command(BaseCommand):
         locations = [
             {
                 'name': 'New York Public Library',
+                'address': '476 5th Ave, New York, NY 10018',
                 'coordinates': [-73.9822, 40.7532]
             },
             {
                 'name': 'Barclays Center',
+                'address': '620 Atlantic Ave, Brooklyn, NY 11217',
                 'coordinates': [-73.9758, 40.6828]
             },
             {
                 'name': 'Bryant Park',
+                'address': 'Between 40th and 42nd Streets & Fifth and Sixth Avenues, New York, NY 10018',
                 'coordinates': [-73.9832, 40.7536]
             },
             {
                 'name': 'East Village',
+                'address': 'East Village, New York, NY',
                 'coordinates': [-73.9818, 40.7264]
             },
             {
                 'name': 'Central Park',
+                'address': 'Central Park, New York, NY',
                 'coordinates': [-73.9665, 40.7829]
             }
         ]
