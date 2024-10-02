@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, Link } from 'react-router-dom';
 import PostList from './components/PostList';
 import PostDetail from './components/PostDetail';
 import AllPosts from './components/AllPosts';
@@ -13,10 +13,18 @@ function App() {
            <div className="flex justify-between">
              <div className="flex space-x-7">
                <div>
-                 <a href="/" className="flex items-center py-4 px-2">
+                 <Link to="/" className="flex items-center py-4 px-2">
                    <span className="font-semibold text-gray-500 text-lg">Your App Name</span>
-                 </a>
+                 </Link>
                </div>
+             </div>
+             <div className="flex items-center space-x-3">
+               <Link
+                 to="/all-posts"
+                 className="py-2 px-4 bg-blue-500 hover:bg-blue-600 text-white rounded transition duration-300"
+               >
+                 All Posts
+               </Link>
              </div>
            </div>
          </div>

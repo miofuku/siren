@@ -9,7 +9,7 @@ function PostList() {
   useEffect(() => {
     const fetchPosts = async () => {
       try {
-        const response = await axios.get('http://localhost:8000/api/posts/');
+        const response = await axios.get('http://localhost:8000/api/posts/?limit=5');  // Fetch only 5 latest posts
         setPosts(response.data);
       } catch (error) {
         console.error('Error fetching posts:', error);
@@ -25,7 +25,7 @@ function PostList() {
 
   return (
     <div>
-      <h1 className="text-3xl font-bold mb-8 text-center">Recent Posts</h1>
+      <h1 className="text-3xl font-bold mb-8 text-center">Latest Posts</h1>
       {posts.length === 0 ? (
         <p className="text-center">Loading posts...</p>
       ) : (
