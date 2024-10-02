@@ -12,6 +12,7 @@ function PostDetail() {
   const navigate = useNavigate();
   const mapContainer = useRef(null);
   const map = useRef(null);
+  const mapTilerKey = process.env.REACT_APP_MAPTILER_KEY;
 
   useEffect(() => {
     const fetchPost = async () => {
@@ -36,29 +37,34 @@ function PostDetail() {
     fetchPost();
   }, [id]);
 
-  console.log('MapTiler Key:', process.env.REACT_APP_MAPTILER_KEY);
-
   useEffect(() => {
-    if (post && post.locations && post.locations.length > 0) {
-      const location = post.locations[0];
-      if (location.coordinates && location.coordinates.length === 2) {
-        map.current = new maplibregl.Map({
-          container: mapContainer.current,
-          style: `https://api.maptiler.com/maps/streets/style.json?key=${process.env.REACT_APP_MAPTILER_KEY || ''}`,
-          center: location.coordinates,
-          zoom: 14
-        });
+    if (post && post.locations && post.locations.length > 0 && mapTilerKey) {
+      map.current = new maplibregl.Map({
+        container: mapContainer.current,
+        style: `https://api.maptiler.com/maps/bright-v2/style.json?key=${mapTilerKey}`,
+        center: post.locations[0].coordinates, // Initially center on the first location
+        zoom: 12
+      });
 
-        new maplibregl.Marker()
-          .setLngLat(location.coordinates)
-          .addTo(map.current);
+      const bounds = new maplibregl.LngLatBounds();
 
-        // Add a popup with location name
-        new maplibregl.Popup()
-          .setLngLat(location.coordinates)
-          .setHTML(`<h3>${location.name}</h3><p>${location.address}</p>`)
-          .addTo(map.current);
-      }
+      post.locations.forEach((location, index) => {
+        if (location.coordinates && location.coordinates.length === 2) {
+          const [lng, lat] = location.coordinates;
+
+          // Add marker for each location
+          new maplibregl.Marker({ color: `hsl(${index * 137.5 % 360}, 70%, 50%)` })
+            .setLngLat([lng, lat])
+            .setPopup(new maplibregl.Popup().setHTML(`<h3>${location.name}</h3><p>${location.address}</p>`))
+            .addTo(map.current);
+
+          // Extend bounds to include this location
+          bounds.extend([lng, lat]);
+        }
+      });
+
+      // Fit the map to the bounds of all markers
+      map.current.fitBounds(bounds, { padding: 50, maxZoom: 15 });
     }
 
     return () => {
@@ -66,7 +72,7 @@ function PostDetail() {
         map.current.remove();
       }
     };
-  }, [post]);
+  }, [post, mapTilerKey]);
 
   const renderLocations = () => {
     if (!post.locations || post.locations.length === 0) return null;

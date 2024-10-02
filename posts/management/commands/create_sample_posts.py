@@ -6,8 +6,9 @@ import random
 
 User = get_user_model()
 
+
 class Command(BaseCommand):
-    help = 'Creates 10 sample posts for the InfoShare platform'
+    help = 'Creates sample posts for the InfoShare platform with multiple locations'
 
     def handle(self, *args, **kwargs):
         # Ensure we have a user to associate with posts
@@ -22,7 +23,7 @@ class Command(BaseCommand):
             user.save()
 
         # Sample data
-        post_types = ['community_event', 'public_service', 'crime_warning']
+        post_types = ['community_event', 'public_service', 'crime_warning', 'traffic_update']
         locations = [
             {
                 'name': 'New York Public Library',
@@ -48,31 +49,69 @@ class Command(BaseCommand):
                 'name': 'Central Park',
                 'address': 'Central Park, New York, NY',
                 'coordinates': [-73.9665, 40.7829]
+            },
+            {
+                'name': 'Times Square',
+                'address': 'Manhattan, NY 10036',
+                'coordinates': [-73.9855, 40.7580]
+            },
+            {
+                'name': 'Brooklyn Bridge',
+                'address': 'Brooklyn Bridge, New York, NY 10038',
+                'coordinates': [-73.9969, 40.7061]
+            },
+            {
+                'name': 'Statue of Liberty',
+                'address': 'New York, NY 10004',
+                'coordinates': [-74.0445, 40.6892]
             }
         ]
 
-        titles = [
-            "Community Clean-up Day",
-            "Free Health Check-up Camp",
-            "Local Art Exhibition",
-            "Neighborhood Watch Meeting",
-            "Farmers Market Opening",
-            "Street Fair Announcement",
-            "Emergency Preparedness Workshop",
-            "Lost Pet Alert",
-            "Traffic Diversion Notice",
-            "Volunteer Recruitment Drive"
+        posts_data = [
+            {
+                'title': "City-wide Clean-up Initiative",
+                'content': "Join our city-wide clean-up initiative this weekend! We're targeting multiple locations across the city to make our community cleaner and greener.",
+                'type': 'community_event',
+                'locations_count': random.randint(2, 4)
+            },
+            {
+                'title': "Multi-location Health Check-up Camp",
+                'content': "Free health check-up camps are being organized at various locations throughout the city. Visit your nearest camp for a comprehensive health check-up.",
+                'type': 'public_service',
+                'locations_count': random.randint(3, 5)
+            },
+            {
+                'title': "Neighborhood Watch Alert",
+                'content': "Recent reports of suspicious activity in multiple areas. Stay vigilant and report any unusual behavior to the local authorities.",
+                'type': 'crime_warning',
+                'locations_count': random.randint(2, 3)
+            },
+            {
+                'title': "Weekend Traffic Diversions",
+                'content': "Due to the annual marathon, expect traffic diversions and road closures at several key points in the city this weekend.",
+                'type': 'traffic_update',
+                'locations_count': random.randint(4, 6)
+            },
+            {
+                'title': "Mobile Vaccination Units",
+                'content': "COVID-19 vaccination drive continues with mobile units visiting different neighborhoods. Check if a unit is coming to your area!",
+                'type': 'public_service',
+                'locations_count': random.randint(3, 5)
+            }
         ]
 
-        for i in range(10):
+        for post_data in posts_data:
+            post_locations = random.sample(locations, post_data['locations_count'])
             post = Post.objects.create(
-                title=titles[i],
-                content=f"This is sample content for the post: {titles[i]}. Please check the details and participate!",
-                type=random.choice(post_types),
-                locations=[random.choice(locations)],
+                title=post_data['title'],
+                content=post_data['content'],
+                type=post_data['type'],
+                locations=post_locations,
                 author=user,
-                created_at=timezone.now() - timezone.timedelta(days=random.uniform(0, 4))  # Random time within the last 4 days
+                created_at=timezone.now() - timezone.timedelta(days=random.uniform(0, 7))
             )
-            self.stdout.write(self.style.SUCCESS(f'Successfully created post: {post.title}'))
+            self.stdout.write(
+                self.style.SUCCESS(f"Successfully created post: {post.title} with {len(post_locations)} locations"))
 
-        self.stdout.write(self.style.SUCCESS('Successfully created 10 sample posts'))
+        self.stdout.write(
+            self.style.SUCCESS(f'Successfully created {len(posts_data)} sample posts with multiple locations'))
