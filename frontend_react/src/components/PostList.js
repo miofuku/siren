@@ -1,33 +1,93 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
 
 function PostList() {
   const [posts, setPosts] = useState([]);
   const [error, setError] = useState(null);
+  const { register, handleSubmit } = useForm();
+
+  const fetchPosts = async (filters = {}) => {
+    try {
+      const params = new URLSearchParams(filters);
+      const response = await axios.get(`http://localhost:8000/api/posts/?${params.toString()}`);
+      setPosts(response.data);
+    } catch (error) {
+      console.error('Error fetching posts:', error);
+      setError('Error fetching posts. Please try again later.');
+    }
+  };
 
   useEffect(() => {
-    const fetchPosts = async () => {
-      try {
-        const response = await axios.get('http://localhost:8000/api/posts/?limit=5');  // Fetch only 5 latest posts
-        setPosts(response.data);
-      } catch (error) {
-        console.error('Error fetching posts:', error);
-        setError('Error fetching posts. Please try again later.');
-      }
-    };
     fetchPosts();
   }, []);
+
+  const onSubmit = (data) => {
+    fetchPosts(data);
+  };
 
   if (error) {
     return <div className="text-red-500 text-center">{error}</div>;
   }
 
   return (
-    <div>
-      <h1 className="text-3xl font-bold mb-8 text-center">Latest Posts</h1>
+    <div className="container mx-auto px-4">
+      <h1 className="text-3xl font-bold mb-8 text-center">Posts</h1>
+
+      <form onSubmit={handleSubmit(onSubmit)} className="mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <input
+            {...register('search')}
+            placeholder="Search posts..."
+            className="p-2 border rounded"
+          />
+          <select {...register('type')} className="p-2 border rounded">
+            <option value="">All Types</option>
+            <option value="community_event">Community Event</option>
+            <option value="public_service">Public Service</option>
+            <option value="crime_warning">Crime Warning</option>
+            <option value="traffic_update">Traffic Update</option>
+          </select>
+          <input
+            {...register('start_date')}
+            type="date"
+            className="p-2 border rounded"
+          />
+          <input
+            {...register('end_date')}
+            type="date"
+            className="p-2 border rounded"
+          />
+          <input
+            {...register('latitude')}
+            type="number"
+            step="any"
+            placeholder="Latitude"
+            className="p-2 border rounded"
+          />
+          <input
+            {...register('longitude')}
+            type="number"
+            step="any"
+            placeholder="Longitude"
+            className="p-2 border rounded"
+          />
+          <input
+            {...register('radius')}
+            type="number"
+            step="any"
+            placeholder="Radius (km)"
+            className="p-2 border rounded"
+          />
+        </div>
+        <button type="submit" className="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+          Apply Filters
+        </button>
+      </form>
+
       {posts.length === 0 ? (
-        <p className="text-center">Loading posts...</p>
+        <p className="text-center">No posts found.</p>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {posts.map(post => (
@@ -45,14 +105,6 @@ function PostList() {
           ))}
         </div>
       )}
-      <div className="mt-8 text-center">
-        <Link
-          to="/all-posts"
-          className="bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600 transition duration-300 text-lg font-semibold"
-        >
-          View All Posts
-        </Link>
-      </div>
     </div>
   );
 }

@@ -25,6 +25,7 @@ INSTALLED_APPS = [
     'users',
     'posts',
     'corsheaders',
+    'django_filters',
 ]
 
 MIDDLEWARE = [
@@ -81,6 +82,7 @@ REST_FRAMEWORK = {
         'custom_renderers.CustomJSONRenderer',
         'rest_framework.renderers.BrowsableAPIRenderer',
     ],
+    'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend'],
 }
 
 # Default primary key field type
