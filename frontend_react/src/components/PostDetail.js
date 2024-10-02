@@ -36,13 +36,15 @@ function PostDetail() {
     fetchPost();
   }, [id]);
 
+  console.log('MapTiler Key:', process.env.REACT_APP_MAPTILER_KEY);
+
   useEffect(() => {
     if (post && post.locations && post.locations.length > 0) {
       const location = post.locations[0];
       if (location.coordinates && location.coordinates.length === 2) {
         map.current = new maplibregl.Map({
           container: mapContainer.current,
-          style: `https://api.maptiler.com/maps/streets/style.json?key=${process.env.REACT_APP_MAPTILER_KEY}`,
+          style: `https://api.maptiler.com/maps/streets/style.json?key=${process.env.REACT_APP_MAPTILER_KEY || ''}`,
           center: location.coordinates,
           zoom: 14
         });

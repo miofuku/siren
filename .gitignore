@@ -1,10 +1,11 @@
 */node_modules/
 .idea/
 .next/
-.env
+.env*
 venv/
 */__pycache__
 */*/__pycache__
 __pycache__
 */*/*/__pycache__
 staticfiles
+*/.env*
