@@ -5,43 +5,28 @@ from django_filters.rest_framework import DjangoFilterBackend
 from bson import ObjectId
 from .models import Post
 from .serializers import PostSerializer
-from django.utils.dateparse import parse_datetime
-from django.utils.timezone import make_aware
+from django.db.models import Q
 
 
 class PostViewSet(viewsets.ModelViewSet):
     queryset = Post.objects.all().order_by('-created_at')
     serializer_class = PostSerializer
-    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
     filterset_fields = ['type']
-    search_fields = ['title', 'content']
     ordering_fields = ['created_at', 'updated_at']
 
     def get_queryset(self):
         queryset = super().get_queryset()
 
-        # Filter by date range
-        start_date = self.request.query_params.get('start_date', None)
-        end_date = self.request.query_params.get('end_date', None)
+        # Search by content keyword
+        keyword = self.request.query_params.get('keyword', None)
+        if keyword:
+            queryset = queryset.filter(Q(title__icontains=keyword) | Q(content__icontains=keyword))
 
-        if start_date:
-            start_date = make_aware(parse_datetime(start_date))
-            queryset = queryset.filter(created_at__gte=start_date)
-
-        if end_date:
-            end_date = make_aware(parse_datetime(end_date))
-            queryset = queryset.filter(created_at__lte=end_date)
-
-        # Filter by location
-        latitude = self.request.query_params.get('latitude', None)
-        longitude = self.request.query_params.get('longitude', None)
-        radius = self.request.query_params.get('radius', None)  # in kilometers
-
-        if latitude and longitude and radius:
-            lat, lon, rad = float(latitude), float(longitude), float(radius)
-            queryset = queryset.filter(
-                locations__coordinates__geo_within_center=[[lon, lat], rad / 111.12]
-            )
+        # Search by location name
+        location = self.request.query_params.get('location', None)
+        if location:
+            queryset = queryset.filter(locations__name__icontains=location)
 
         return queryset
 

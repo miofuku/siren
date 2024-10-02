@@ -36,10 +36,15 @@ function PostList() {
       <h1 className="text-3xl font-bold mb-8 text-center">Posts</h1>
 
       <form onSubmit={handleSubmit(onSubmit)} className="mb-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <input
-            {...register('search')}
-            placeholder="Search posts..."
+            {...register('keyword')}
+            placeholder="Search by keyword..."
+            className="p-2 border rounded"
+          />
+          <input
+            {...register('location')}
+            placeholder="Search by location..."
             className="p-2 border rounded"
           />
           <select {...register('type')} className="p-2 border rounded">
@@ -49,40 +54,9 @@ function PostList() {
             <option value="crime_warning">Crime Warning</option>
             <option value="traffic_update">Traffic Update</option>
           </select>
-          <input
-            {...register('start_date')}
-            type="date"
-            className="p-2 border rounded"
-          />
-          <input
-            {...register('end_date')}
-            type="date"
-            className="p-2 border rounded"
-          />
-          <input
-            {...register('latitude')}
-            type="number"
-            step="any"
-            placeholder="Latitude"
-            className="p-2 border rounded"
-          />
-          <input
-            {...register('longitude')}
-            type="number"
-            step="any"
-            placeholder="Longitude"
-            className="p-2 border rounded"
-          />
-          <input
-            {...register('radius')}
-            type="number"
-            step="any"
-            placeholder="Radius (km)"
-            className="p-2 border rounded"
-          />
         </div>
         <button type="submit" className="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
-          Apply Filters
+          Search
         </button>
       </form>
 
@@ -95,6 +69,9 @@ function PostList() {
               <h2 className="text-xl font-semibold mb-2">{post.title}</h2>
               <p className="text-gray-600 mb-4">{post.content.substring(0, 100)}...</p>
               <p className="text-sm text-gray-500 mb-4">Type: {post.type}</p>
+              <p className="text-sm text-gray-500 mb-4">
+                Locations: {post.locations.map(loc => loc.name).join(', ')}
+              </p>
               <Link
                 to={`/post/${post._id}`}
                 className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition duration-300"
