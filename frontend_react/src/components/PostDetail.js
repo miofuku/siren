@@ -1,6 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { useParams, Link, useNavigate } from 'react-router-dom';
+import maplibregl from 'maplibre-gl';
+import 'maplibre-gl/dist/maplibre-gl.css';
 
 function PostDetail() {
   const [post, setPost] = useState(null);
@@ -8,6 +10,8 @@ function PostDetail() {
   const [loading, setLoading] = useState(true);
   const { id } = useParams();
   const navigate = useNavigate();
+  const mapContainer = useRef(null);
+  const map = useRef(null);
 
   useEffect(() => {
     const fetchPost = async () => {
@@ -32,34 +36,49 @@ function PostDetail() {
     fetchPost();
   }, [id]);
 
-  const renderLocations = () => {
-    if (!post.locations) return null;
+  useEffect(() => {
+    if (post && post.locations && post.locations.length > 0) {
+      const location = post.locations[0];
+      if (location.coordinates && location.coordinates.length === 2) {
+        map.current = new maplibregl.Map({
+          container: mapContainer.current,
+          style: `https://api.maptiler.com/maps/streets/style.json?key=${process.env.REACT_APP_MAPTILER_KEY}`,
+          center: location.coordinates,
+          zoom: 14
+        });
 
-    let locationsArray = post.locations;
-    if (!Array.isArray(locationsArray)) {
-      // If it's not an array, try to parse it as JSON
-      try {
-        locationsArray = JSON.parse(post.locations);
-      } catch (e) {
-        console.error('Failed to parse locations:', e);
-        return <p>Error displaying locations</p>;
+        new maplibregl.Marker()
+          .setLngLat(location.coordinates)
+          .addTo(map.current);
+
+        // Add a popup with location name
+        new maplibregl.Popup()
+          .setLngLat(location.coordinates)
+          .setHTML(`<h3>${location.name}</h3><p>${location.address}</p>`)
+          .addTo(map.current);
       }
     }
 
-    if (!Array.isArray(locationsArray)) {
-      // If it's still not an array, it might be a single location object
-      locationsArray = [locationsArray];
-    }
+    return () => {
+      if (map.current) {
+        map.current.remove();
+      }
+    };
+  }, [post]);
+
+  const renderLocations = () => {
+    if (!post.locations || post.locations.length === 0) return null;
 
     return (
       <div className="mb-4">
         <h3 className="text-lg font-semibold mb-2">Locations:</h3>
-        {locationsArray.map((location, index) => (
-          <div key={index} className="mb-2">
-            <p className="font-medium">{location.name}</p>
+        {post.locations.map((location, index) => (
+          <div key={index} className="mb-2 p-4 bg-gray-100 rounded-lg">
+            <p className="font-medium text-lg">{location.name}</p>
+            <p className="text-sm text-gray-600">{location.address}</p>
             {location.coordinates && (
-              <p className="text-sm text-gray-600">
-                Coordinates: {location.coordinates[0]}, {location.coordinates[1]}
+              <p className="text-xs text-gray-500">
+                Coordinates: {location.coordinates[1]}, {location.coordinates[0]}
               </p>
             )}
           </div>
@@ -102,6 +121,7 @@ function PostDetail() {
           <p className="text-gray-700 leading-relaxed">{post.content}</p>
         </div>
         {renderLocations()}
+        <div ref={mapContainer} className="map-container" style={{height: "400px", marginBottom: "20px"}} />
         <div className="flex items-center text-sm text-gray-600">
           <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>

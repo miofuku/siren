@@ -3,7 +3,7 @@ from .models import Post
 
 
 class PostSerializer(serializers.ModelSerializer):
-    author = serializers.StringRelatedField()
+    locations = serializers.JSONField()  # Ensure this field is present
 
     class Meta:
         model = Post
