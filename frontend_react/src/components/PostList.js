@@ -3,6 +3,8 @@ import axios from 'axios';
 import { Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 
+const API_URL = process.env.REACT_APP_API_URL;
+
 function PostList() {
   const [posts, setPosts] = useState([]);
   const [error, setError] = useState(null);
@@ -11,7 +13,7 @@ function PostList() {
   const fetchPosts = async (filters = {}) => {
     try {
       const params = new URLSearchParams(filters);
-      const response = await axios.get(`http://localhost:8000/api/posts/?${params.toString()}`);
+      const response = await axios.get(`${API_URL}/posts/?${params.toString()}`);
       setPosts(response.data);
     } catch (error) {
       console.error('Error fetching posts:', error);

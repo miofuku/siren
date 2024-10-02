@@ -4,6 +4,8 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 
+const API_URL = process.env.REACT_APP_API_URL;
+
 function PostDetail() {
   const [post, setPost] = useState(null);
   const [error, setError] = useState(null);
@@ -24,7 +26,7 @@ function PostDetail() {
       }
 
       try {
-        const response = await axios.get(`http://localhost:8000/api/posts/${id}/`);
+        const response = await axios.get(`${API_URL}/posts/${id}/`);
         setPost(response.data);
         setLoading(false);
       } catch (error) {

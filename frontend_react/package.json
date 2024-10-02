@@ -21,6 +21,7 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
+    "build:prod": "env-cmd -f .env.production react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
@@ -52,6 +53,7 @@
     "@testing-library/react": "^16.0.1",
     "autoprefixer": "^10.4.20",
     "babel-jest": "^29.7.0",
+    "env-cmd": "^10.1.0",
     "jest": "^27.5.1",
     "jest-environment-jsdom": "^29.7.0",
     "postcss": "^8.4.47",
