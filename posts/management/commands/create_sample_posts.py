@@ -6,9 +6,8 @@ import random
 
 User = get_user_model()
 
-
 class Command(BaseCommand):
-    help = 'Creates sample posts for the InfoShare platform with multiple locations'
+    help = 'Creates sample posts for the InfoShare platform with multiple locations and resource links'
 
     def handle(self, *args, **kwargs):
         # Ensure we have a user to associate with posts
@@ -72,31 +71,36 @@ class Command(BaseCommand):
                 'title': "City-wide Clean-up Initiative",
                 'content': "Join our city-wide clean-up initiative this weekend! We're targeting multiple locations across the city to make our community cleaner and greener.",
                 'type': 'community_event',
-                'locations_count': random.randint(2, 4)
+                'locations_count': random.randint(2, 4),
+                'resource_link': 'https://www.nyc.gov/events/cleanup2024'
             },
             {
                 'title': "Multi-location Health Check-up Camp",
                 'content': "Free health check-up camps are being organized at various locations throughout the city. Visit your nearest camp for a comprehensive health check-up.",
                 'type': 'public_service',
-                'locations_count': random.randint(3, 5)
+                'locations_count': random.randint(3, 5),
+                'resource_link': 'https://www.nychealthdepartment.gov/camps'
             },
             {
                 'title': "Neighborhood Watch Alert",
                 'content': "Recent reports of suspicious activity in multiple areas. Stay vigilant and report any unusual behavior to the local authorities.",
                 'type': 'crime_warning',
-                'locations_count': random.randint(2, 3)
+                'locations_count': random.randint(2, 3),
+                'resource_link': 'https://www.nypdcrimestoppers.com'
             },
             {
                 'title': "Weekend Traffic Diversions",
                 'content': "Due to the annual marathon, expect traffic diversions and road closures at several key points in the city this weekend.",
                 'type': 'traffic_update',
-                'locations_count': random.randint(4, 6)
+                'locations_count': random.randint(4, 6),
+                'resource_link': 'https://www.nycmarathon.org/traffic'
             },
             {
                 'title': "Mobile Vaccination Units",
                 'content': "COVID-19 vaccination drive continues with mobile units visiting different neighborhoods. Check if a unit is coming to your area!",
                 'type': 'public_service',
-                'locations_count': random.randint(3, 5)
+                'locations_count': random.randint(3, 5),
+                'resource_link': 'https://www.nycvaccine.gov/mobile'
             }
         ]
 
@@ -108,10 +112,13 @@ class Command(BaseCommand):
                 type=post_data['type'],
                 locations=post_locations,
                 author=user,
-                created_at=timezone.now() - timezone.timedelta(days=random.uniform(0, 7))
+                created_at=timezone.now() - timezone.timedelta(days=random.uniform(0, 7)),
+                resource_link=post_data['resource_link']
             )
             self.stdout.write(
-                self.style.SUCCESS(f"Successfully created post: {post.title} with {len(post_locations)} locations"))
+                self.style.SUCCESS(f"Successfully created post: {post.title} with {len(post_locations)} locations")
+            )
 
         self.stdout.write(
-            self.style.SUCCESS(f'Successfully created {len(posts_data)} sample posts with multiple locations'))
+            self.style.SUCCESS(f'Successfully created {len(posts_data)} sample posts with multiple locations and resource links')
+        )

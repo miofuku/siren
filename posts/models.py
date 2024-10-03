@@ -9,10 +9,11 @@ class Post(models.Model):
     title = models.CharField(max_length=200)
     content = models.TextField()
     type = models.CharField(max_length=50)
-    locations = models.JSONField(default=list)  # This will store the locations as a JSON array
+    locations = models.JSONField(default=list)
     author = models.ForeignKey(User, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    resource_link = models.URLField(max_length=500, default="https://example.com")  # Added default value
 
     def __str__(self):
         return self.title

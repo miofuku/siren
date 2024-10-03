@@ -142,8 +142,13 @@ function PostDetail() {
             Posted on {new Date(post.created_at).toLocaleDateString()}
           </span>
         </div>
-        <div className="prose max-w-none mb-6">
+        <div className="prose max-w-none mb-2">
           <p className="text-gray-700 leading-relaxed">{post.content}</p>
+        </div>
+        <div className="text-sm text-blue-600 hover:text-blue-800 mb-6">
+          <a href={post.resource_link} target="_blank" rel="noopener noreferrer">
+            Original Source
+          </a>
         </div>
         {renderLocations()}
         <div ref={mapContainer} className="map-container" style={{height: "400px", marginBottom: "20px"}} />
