@@ -69,10 +69,10 @@ function PostList() {
           {posts.map(post => (
             <div key={post._id} className="bg-white rounded-lg shadow-md p-6">
               <h2 className="text-xl font-semibold mb-2">{post.title}</h2>
-              <p className="text-gray-600 mb-4">{post.content.substring(0, 100)}...</p>
+              <p className="text-gray-600 mb-4">{post.content?.substring(0, 100)}...</p>
               <p className="text-sm text-gray-500 mb-4">Type: {post.type}</p>
               <p className="text-sm text-gray-500 mb-4">
-                Locations: {post.locations.map(loc => loc.name).join(', ')}
+                Locations: {post.locations?.map(loc => loc.name || 'Unnamed Location').join(', ')}
               </p>
               <Link
                 to={`/post/${post._id}`}

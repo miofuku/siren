@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import axios from 'axios';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import maplibregl from 'maplibre-gl';
@@ -16,77 +16,92 @@ function PostDetail() {
   const map = useRef(null);
   const mapTilerKey = process.env.REACT_APP_MAPTILER_KEY;
 
-  useEffect(() => {
-    const fetchPost = async () => {
-      if (!id || id === 'undefined') {
-        console.error('Invalid post ID:', id);
-        setError('Invalid post ID');
-        setLoading(false);
-        return;
-      }
+  const fetchPost = useCallback(async () => {
+    if (!id || id === 'undefined') {
+      console.error('Invalid post ID:', id);
+      setError('Invalid post ID');
+      setLoading(false);
+      return;
+    }
 
-      try {
-        const response = await axios.get(`${API_URL}/posts/${id}/`);
-        setPost(response.data);
-        setLoading(false);
-      } catch (error) {
-        console.error('Error fetching post:', error);
-        setError(error.response?.data?.detail || 'Error fetching post. Please try again later.');
-        setLoading(false);
-      }
-    };
-
-    fetchPost();
+    try {
+      const response = await axios.get(`${API_URL}/posts/${id}/`);
+      setPost(response.data);
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching post:', error);
+      setError(error.response?.data?.detail || 'Error fetching post. Please try again later.');
+      setLoading(false);
+    }
   }, [id]);
 
   useEffect(() => {
-    if (post && post.locations && post.locations.length > 0 && mapTilerKey) {
+    fetchPost();
+  }, [fetchPost]);
+
+  useEffect(() => {
+    if (post && post.locations && post.locations.length > 0 && mapTilerKey && !map.current && mapContainer.current) {
+      const firstValidLocation = post.locations.find(loc =>
+        loc.coordinates &&
+        Array.isArray(loc.coordinates) &&
+        loc.coordinates.length === 2 &&
+        loc.coordinates.every(coord => typeof coord === 'number')
+      );
+
+      if (!firstValidLocation) {
+        console.error('No valid location coordinates found');
+        return;
+      }
+
       map.current = new maplibregl.Map({
         container: mapContainer.current,
         style: `https://api.maptiler.com/maps/bright-v2/style.json?key=${mapTilerKey}`,
-        center: post.locations[0].coordinates, // Initially center on the first location
+        center: firstValidLocation.coordinates,
         zoom: 12
       });
 
       const bounds = new maplibregl.LngLatBounds();
 
       post.locations.forEach((location, index) => {
-        if (location.coordinates && location.coordinates.length === 2) {
+        if (location.coordinates &&
+            Array.isArray(location.coordinates) &&
+            location.coordinates.length === 2 &&
+            location.coordinates.every(coord => typeof coord === 'number')) {
           const [lng, lat] = location.coordinates;
 
-          // Add marker for each location
           new maplibregl.Marker({ color: `hsl(${index * 137.5 % 360}, 70%, 50%)` })
             .setLngLat([lng, lat])
-            .setPopup(new maplibregl.Popup().setHTML(`<h3>${location.name}</h3><p>${location.address}</p>`))
+            .setPopup(new maplibregl.Popup().setHTML(`<h3>${location.name || 'Unnamed Location'}</h3><p>${location.address || 'No address provided'}</p>`))
             .addTo(map.current);
 
-          // Extend bounds to include this location
           bounds.extend([lng, lat]);
         }
       });
 
-      // Fit the map to the bounds of all markers
-      map.current.fitBounds(bounds, { padding: 50, maxZoom: 15 });
+      if (!bounds.isEmpty()) {
+        map.current.fitBounds(bounds, { padding: 50, maxZoom: 15 });
+      }
     }
 
     return () => {
       if (map.current) {
         map.current.remove();
+        map.current = null;
       }
     };
   }, [post, mapTilerKey]);
 
   const renderLocations = () => {
-    if (!post.locations || post.locations.length === 0) return null;
+    if (!post?.locations || post.locations.length === 0) return null;
 
     return (
       <div className="mb-4">
         <h3 className="text-lg font-semibold mb-2">Locations:</h3>
         {post.locations.map((location, index) => (
           <div key={index} className="mb-2 p-4 bg-gray-100 rounded-lg">
-            <p className="font-medium text-lg">{location.name}</p>
-            <p className="text-sm text-gray-600">{location.address}</p>
-            {location.coordinates && (
+            <p className="font-medium text-lg">{location.name || 'Unnamed Location'}</p>
+            <p className="text-sm text-gray-600">{location.address || 'No address provided'}</p>
+            {location.coordinates && Array.isArray(location.coordinates) && location.coordinates.length === 2 && (
               <p className="text-xs text-gray-500">
                 Coordinates: {location.coordinates[1]}, {location.coordinates[0]}
               </p>
