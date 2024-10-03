@@ -1,16 +1,18 @@
-from rest_framework import viewsets, filters, permissions
+from rest_framework import viewsets, filters, permissions, status
 from rest_framework.response import Response
-from rest_framework import status
 from django_filters.rest_framework import DjangoFilterBackend
-from bson import ObjectId
 from .models import Post
 from .serializers import PostSerializer
-from django.db.models import Q
 from .permissions import IsAuthorOrReadOnly
+from django.conf import settings
+from pymongo import MongoClient
+from bson import ObjectId
+import logging
+
+logger = logging.getLogger(__name__)
 
 
-class PostViewSet(viewsets.ModelViewSet):
-    queryset = Post.objects.all().order_by('-created_at')
+class PostViewSet(viewsets.ViewSet):
     serializer_class = PostSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsAuthorOrReadOnly]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
@@ -18,49 +20,70 @@ class PostViewSet(viewsets.ModelViewSet):
     search_fields = ['title', 'content']
     ordering_fields = ['created_at', 'updated_at']
 
-    def perform_create(self, serializer):
-            serializer.save(author=self.request.user)
-
     def get_queryset(self):
-        queryset = super().get_queryset()
+        client = MongoClient(settings.DATABASES['default']['CLIENT']['host'])
+        db = client[settings.DATABASES['default']['NAME']]
+        collection = db['posts_post']
+
+        query = {'is_active': True}
 
         # Filter by latest posts
-        latest = self.request.query_params.get('latest', None)
+        latest = self.request.query_params.get('latest')
         if latest:
             try:
                 latest = int(latest)
-                queryset = queryset[:latest]
             except ValueError:
-                pass
+                latest = None
 
         # Search by content keyword
-        keyword = self.request.query_params.get('keyword', None)
+        keyword = self.request.query_params.get('keyword')
         if keyword:
-            queryset = queryset.filter(Q(title__icontains=keyword) | Q(content__icontains=keyword))
+            query['$or'] = [
+                {'title': {'$regex': keyword, '$options': 'i'}},
+                {'content': {'$regex': keyword, '$options': 'i'}}
+            ]
 
         # Search by location name
-        location = self.request.query_params.get('location', None)
+        location = self.request.query_params.get('location')
         if location:
-            queryset = queryset.filter(locations__name__icontains=location)
+            query['locations.name'] = {'$regex': location, '$options': 'i'}
 
-        return queryset
+        cursor = collection.find(query).sort('created_at', -1)
+        if latest:
+            cursor = cursor.limit(latest)
+
+        posts = list(cursor)
+        for post in posts:
+            post['_id'] = str(post['_id'])
+            post['author_id'] = str(post['author_id'])
+
+        client.close()
+        return posts
 
     def list(self, request):
-        queryset = self.filter_queryset(self.get_queryset())
-        page = self.paginate_queryset(queryset)
-        if page is not None:
-            serializer = self.get_serializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
-
-        serializer = self.get_serializer(queryset, many=True)
+        queryset = self.get_queryset()
+        serializer = self.serializer_class(queryset, many=True)
         return Response(serializer.data)
 
     def retrieve(self, request, pk=None):
-        try:
-            post = self.queryset.get(_id=ObjectId(pk))
-            serializer = self.get_serializer(post)
+        client = MongoClient(settings.DATABASES['default']['CLIENT']['host'])
+        db = client[settings.DATABASES['default']['NAME']]
+        collection = db['posts_post']
+
+        post = collection.find_one({'_id': ObjectId(pk)})
+        if post:
+            post['_id'] = str(post['_id'])
+            post['author_id'] = str(post['author_id'])
+            serializer = self.serializer_class(post)
             return Response(serializer.data)
-        except Post.DoesNotExist:
+        else:
             return Response({"detail": "Post not found"}, status=status.HTTP_404_NOT_FOUND)
-        except Exception as e:
-            return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user)
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        instance.is_active = False
+        instance.save()
+        return Response(status=status.HTTP_204_NO_CONTENT)

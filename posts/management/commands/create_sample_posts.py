@@ -3,23 +3,31 @@ from django.contrib.auth import get_user_model
 from posts.models import Post
 from django.utils import timezone
 import random
+from bson import ObjectId
 
 User = get_user_model()
+
 
 class Command(BaseCommand):
     help = 'Creates sample posts for the InfoShare platform with multiple locations and resource links'
 
     def handle(self, *args, **kwargs):
         # Ensure we have a user to associate with posts
-        user, created = User.objects.get_or_create(
-            username='admin',
-            email='admin@example.com',
-            is_staff=True,
-            is_superuser=True
-        )
-        if created:
-            user.set_password('adminpassword')
-            user.save()
+        try:
+            user = User.objects.filter(username='admin', email='admin@example.com').first()
+            if user is None:
+                user = User.objects.create_superuser('admin', 'admin@example.com', 'adminpassword')
+                self.stdout.write(self.style.SUCCESS(f"Created new superuser: {user.username}"))
+            else:
+                self.stdout.write(self.style.SUCCESS(f"Using existing user: {user.username}"))
+
+            # Ensure the user has an ID
+            if user._id is None:
+                user._id = ObjectId()
+                user.save()
+        except Exception as e:
+            self.stdout.write(self.style.ERROR(f"Error setting up user: {str(e)}"))
+            return
 
         # Sample data
         post_types = ['community_event', 'public_service', 'crime_warning', 'traffic_update']
@@ -106,19 +114,26 @@ class Command(BaseCommand):
 
         for post_data in posts_data:
             post_locations = random.sample(locations, post_data['locations_count'])
-            post = Post.objects.create(
+            post = Post(
                 title=post_data['title'],
                 content=post_data['content'],
                 type=post_data['type'],
                 locations=post_locations,
                 author=user,
                 created_at=timezone.now() - timezone.timedelta(days=random.uniform(0, 7)),
-                resource_link=post_data['resource_link']
+                resource_link=post_data['resource_link'],
+                is_active=True
             )
-            self.stdout.write(
-                self.style.SUCCESS(f"Successfully created post: {post.title} with {len(post_locations)} locations")
-            )
+            try:
+                post.save()
+                self.stdout.write(
+                    self.style.SUCCESS(f"Successfully created post: {post.title} with {len(post_locations)} locations")
+                )
+            except Exception as e:
+                self.stdout.write(
+                    self.style.ERROR(f"Failed to create post: {post.title}. Error: {str(e)}")
+                )
 
         self.stdout.write(
-            self.style.SUCCESS(f'Successfully created {len(posts_data)} sample posts with multiple locations and resource links')
+            self.style.SUCCESS(f'Finished creating sample posts')
         )

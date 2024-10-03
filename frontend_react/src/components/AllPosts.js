@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 
 const API_URL = process.env.REACT_APP_API_URL;
@@ -9,6 +9,7 @@ function AllPosts() {
   const [posts, setPosts] = useState([]);
   const [error, setError] = useState(null);
   const { register, handleSubmit } = useForm();
+  const navigate = useNavigate();
 
   const fetchPosts = async (filters = {}) => {
     try {
@@ -29,6 +30,18 @@ function AllPosts() {
     fetchPosts(data);
   };
 
+  const handleDelete = async (id) => {
+    if (window.confirm('Are you sure you want to delete this post?')) {
+      try {
+        await axios.delete(`${API_URL}/posts/${id}/`);
+        fetchPosts(); // Refresh the list after deletion
+      } catch (error) {
+        console.error('Error deleting post:', error);
+        setError('Error deleting post. Please try again.');
+      }
+    }
+  };
+
   if (error) {
     return <div className="text-red-500 text-center">{error}</div>;
   }
@@ -38,28 +51,7 @@ function AllPosts() {
       <h1 className="text-3xl font-bold mb-8 text-center">All Posts</h1>
 
       <form onSubmit={handleSubmit(onSubmit)} className="mb-8">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <input
-            {...register('keyword')}
-            placeholder="Search by keyword..."
-            className="p-2 border rounded"
-          />
-          <input
-            {...register('location')}
-            placeholder="Search by location..."
-            className="p-2 border rounded"
-          />
-          <select {...register('type')} className="p-2 border rounded">
-            <option value="">All Types</option>
-            <option value="community_event">Community Event</option>
-            <option value="public_service">Public Service</option>
-            <option value="crime_warning">Crime Warning</option>
-            <option value="traffic_update">Traffic Update</option>
-          </select>
-        </div>
-        <button type="submit" className="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
-          Search
-        </button>
+        {/* ... (keep existing form fields) */}
       </form>
 
       {posts.length === 0 ? (
@@ -79,12 +71,20 @@ function AllPosts() {
               <p className="text-sm text-gray-500 mb-4">
                 Locations: {post.locations?.map(loc => loc.name || 'Unnamed Location').join(', ')}
               </p>
-              <Link
-                to={`/post/${post._id}`}
-                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition duration-300"
-              >
-                Read More
-              </Link>
+              <div className="flex justify-between items-center">
+                <Link
+                  to={`/post/${post._id}`}
+                  className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition duration-300"
+                >
+                  Read More
+                </Link>
+                <button
+                  onClick={() => handleDelete(post._id)}
+                  className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition duration-300"
+                >
+                  Delete
+                </button>
+              </div>
             </div>
           ))}
         </div>
@@ -92,10 +92,10 @@ function AllPosts() {
 
       <div className="mt-8 text-center">
         <Link
-          to="/"
+          to="/create-post"
           className="bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600 transition duration-300 text-lg font-semibold"
         >
-          Back to Latest Posts
+          Create New Post
         </Link>
       </div>
     </div>

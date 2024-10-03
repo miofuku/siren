@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Route, Routes, Link } from 'react-router-dom';
 import PostList from './components/PostList';
 import PostDetail from './components/PostDetail';
 import AllPosts from './components/AllPosts';
+import CreatePost from './components/CreatePost';
 
 function App() {
  return (
@@ -14,14 +15,20 @@ function App() {
              <div className="flex space-x-7">
                <div>
                  <Link to="/" className="flex items-center py-4 px-2">
-                   <span className="font-semibold text-gray-500 text-lg">Your App Name</span>
+                   <span className="font-semibold text-gray-500 text-lg">InfoShare</span>
                  </Link>
                </div>
              </div>
              <div className="flex items-center space-x-3">
                <Link
-                 to="/all-posts"
+                 to="/create-post"
                  className="py-2 px-4 bg-blue-500 hover:bg-blue-600 text-white rounded transition duration-300"
+               >
+                 Create Post
+               </Link>
+               <Link
+                 to="/all-posts"
+                 className="py-2 px-4 bg-green-500 hover:bg-green-600 text-white rounded transition duration-300"
                >
                  All Posts
                </Link>
@@ -34,6 +41,7 @@ function App() {
            <Route path="/" element={<PostList />} />
            <Route path="/post/:id" element={<PostDetail />} />
            <Route path="/all-posts" element={<AllPosts />} />
+           <Route path="/create-post" element={<CreatePost />} />
          </Routes>
        </div>
      </div>

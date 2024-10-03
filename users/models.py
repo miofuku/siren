@@ -1,8 +1,10 @@
-from django.contrib.auth.models import AbstractUser, Group
-from django.db import models
+from django.contrib.auth.models import AbstractUser
+from djongo import models
+from bson import ObjectId
 
 
 class CustomUser(AbstractUser):
+    _id = models.ObjectIdField(primary_key=True, default=ObjectId)
     bio = models.TextField(blank=True)
 
     def __str__(self):

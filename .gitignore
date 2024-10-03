@@ -10,3 +10,4 @@ __pycache__
 staticfiles
 */.env*
 */migrations
+debug*
