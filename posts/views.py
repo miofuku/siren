@@ -12,16 +12,26 @@ from .permissions import IsAuthorOrReadOnly
 class PostViewSet(viewsets.ModelViewSet):
     queryset = Post.objects.all().order_by('-created_at')
     serializer_class = PostSerializer
-    filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
-    filterset_fields = ['type']
-    ordering_fields = ['created_at', 'updated_at']
     permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsAuthorOrReadOnly]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_fields = ['type']
+    search_fields = ['title', 'content']
+    ordering_fields = ['created_at', 'updated_at']
 
     def perform_create(self, serializer):
-        serializer.save(author=self.request.user)
+            serializer.save(author=self.request.user)
 
     def get_queryset(self):
         queryset = super().get_queryset()
+
+        # Filter by latest posts
+        latest = self.request.query_params.get('latest', None)
+        if latest:
+            try:
+                latest = int(latest)
+                queryset = queryset[:latest]
+            except ValueError:
+                pass
 
         # Search by content keyword
         keyword = self.request.query_params.get('keyword', None)

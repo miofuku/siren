@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 
 const API_URL = process.env.REACT_APP_API_URL;
@@ -9,10 +9,11 @@ function PostList() {
   const [posts, setPosts] = useState([]);
   const [error, setError] = useState(null);
   const { register, handleSubmit } = useForm();
+  const navigate = useNavigate();
 
   const fetchPosts = async (filters = {}) => {
     try {
-      const params = new URLSearchParams(filters);
+      const params = new URLSearchParams({ ...filters, latest: 5 });
       const response = await axios.get(`${API_URL}/posts/?${params.toString()}`);
       setPosts(response.data);
     } catch (error) {
@@ -35,7 +36,7 @@ function PostList() {
 
   return (
     <div className="container mx-auto px-4">
-      <h1 className="text-3xl font-bold mb-8 text-center">Posts</h1>
+      <h1 className="text-3xl font-bold mb-8 text-center">Latest Posts</h1>
 
       <form onSubmit={handleSubmit(onSubmit)} className="mb-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -89,6 +90,15 @@ function PostList() {
           ))}
         </div>
       )}
+
+      <div className="mt-8 text-center">
+        <button
+          onClick={() => navigate('/all-posts')}
+          className="bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600 transition duration-300 text-lg font-semibold"
+        >
+          View All Posts
+        </button>
+      </div>
     </div>
   );
 }
